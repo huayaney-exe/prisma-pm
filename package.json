@@ -1,6 +1,6 @@
 {
   "name": "product-builder",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "AI-native product management skills for Claude Code. Context engineering for PMs who build.",
   "bin": {
     "product-builder": "./bin/install.js"

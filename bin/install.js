@@ -216,22 +216,71 @@ function uninstall(targetDir) {
   log('');
 }
 
+// ── True-Color Gradient ──────────────────────────────
+function rgb(r, g, b) {
+  return `\x1b[38;2;${r};${g};${b}m`;
+}
+
+const GRADIENT_STOPS = [
+  [71, 255, 191],   // #47FFBF cyan
+  [131, 118, 255],  // #8376FF purple
+  [255, 72, 199],   // #FF48C7 pink
+];
+
+function lerp(a, b, t) {
+  return Math.round(a + (b - a) * t);
+}
+
+function gradientColor(col, totalCols) {
+  const t = col / Math.max(totalCols - 1, 1);
+  const seg = t * (GRADIENT_STOPS.length - 1);
+  const i = Math.min(Math.floor(seg), GRADIENT_STOPS.length - 2);
+  const lt = seg - i;
+  return [
+    lerp(GRADIENT_STOPS[i][0], GRADIENT_STOPS[i + 1][0], lt),
+    lerp(GRADIENT_STOPS[i][1], GRADIENT_STOPS[i + 1][1], lt),
+    lerp(GRADIENT_STOPS[i][2], GRADIENT_STOPS[i + 1][2], lt),
+  ];
+}
+
+function colorizeRow(row, width, darken) {
+  let out = '';
+  for (let i = 0; i < row.length; i++) {
+    const ch = row[i];
+    if (ch === ' ') {
+      out += ' ';
+    } else {
+      const [r, g, b] = gradientColor(i, width);
+      out += rgb(
+        Math.round(r * darken),
+        Math.round(g * darken),
+        Math.round(b * darken)
+      ) + ch;
+    }
+  }
+  return out + c.reset;
+}
+
 // ── Brand Logo ────────────────────────────────────────
 function printLogo() {
-  const logo = [
+  const rows = [
     '  ██████  ██████  ██ ███████ ██   ██  █████ ',
     '  ██   ██ ██   ██ ██ ██      ███ ███ ██   ██',
     '  ██████  ██████  ██ ███████ ██ █ ██ ███████',
     '  ██      ██  ██  ██      ██ ██   ██ ██   ██',
     '  ██      ██   ██ ██ ███████ ██   ██ ██   ██',
   ];
+  const shadow = '  ▀▀      ▀▀   ▀▀ ▀▀ ▀▀▀▀▀▀▀ ▀▀   ▀▀ ▀▀   ▀▀';
+  const width = rows[0].length;
+
   log('');
-  for (const line of logo) {
-    log(`${c.cyan}${line}${c.reset}`);
+  for (const row of rows) {
+    log(colorizeRow(row, width, 1));
   }
+  log(colorizeRow(shadow, width, 0.4));
   log('');
-  log(`  ${c.bold}Prisma PM${c.reset} ${c.dim}v${VERSION}${c.reset}`);
-  log(`  ${c.dim}AI-native product builder toolset for Claude Code${c.reset}`);
+  log(`  ${c.bold}Product Builder${c.reset} ${c.dim}v${VERSION}${c.reset}`);
+  log(`  ${c.dim}Stop managing. Start building.${c.reset}`);
 }
 
 // ── Main ──────────────────────────────────────────────
