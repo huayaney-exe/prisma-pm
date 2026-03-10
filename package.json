@@ -1,0 +1,41 @@
+{
+  "name": "prisma-pm",
+  "version": "0.2.0",
+  "description": "AI-native product management skills for Claude Code. Context engineering for PMs who build.",
+  "bin": {
+    "prisma-pm": "./bin/install.js"
+  },
+  "files": [
+    "bin/",
+    "commands/",
+    "skill/",
+    "agents/",
+    "frameworks/",
+    "templates/",
+    "workflows/",
+    "references/",
+    "context/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude-code",
+    "product-management",
+    "ai-native",
+    "skills",
+    "pm",
+    "prd",
+    "jtbd",
+    "discovery",
+    "context-engineering"
+  ],
+  "author": "Luis Huayaney",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prisma-pm/prisma-pm"
+  }
+}
