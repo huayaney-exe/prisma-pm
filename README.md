@@ -20,6 +20,10 @@ npx product-builder@latest
 
 <br>
 
+![Product Builder Install](assets/terminal.png)
+
+<br>
+
 *"Products are transformation engines — people pay for the delta between states, not for features."*
 
 *"AI compresses the PM cycle from weeks to hours. 10x more discovery, 10x more validation, 10x faster iteration."*
