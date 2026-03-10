@@ -315,6 +315,11 @@ async function main() {
   log(`  ${c.cyan}/pm:strategy${c.reset}         Force-ranked backlog`);
   log(`  ${c.cyan}/pm:help${c.reset}             Full command reference`);
 
+  // Origin + brand
+  log('');
+  log(`  ${c.dim}From Latin America, for the world.${c.reset}  ${c.cyan}#VamosLatam${c.reset}`);
+  log(`  ${c.cyan}getprisma.lat/product-builder${c.reset}`);
+
   // Getting started
   log('');
   log(`  Run ${c.cyan}/pm:help${c.reset} to get started.`);

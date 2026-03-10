@@ -1,20 +1,51 @@
-# Prisma PM
+```
+██████  ██████  ██ ███████ ██   ██  █████
+██   ██ ██   ██ ██ ██      ███ ███ ██   ██
+██████  ██████  ██ ███████ ██ █ ██ ███████
+██      ██  ██  ██      ██ ██   ██ ██   ██
+██      ██   ██ ██ ███████ ██   ██ ██   ██
+```
 
-AI-native product management for Claude Code. The complete PM lifecycle — from ideation to measurement — powered by context engineering.
+# Product Builder
+
+AI-native product management for Claude Code.
+
+## Philosophy
+
+Products are transformation engines — people pay for the delta between states, not for features. PMs are becoming builders: the ones who think clearly, frame precisely, and ship fast will define the next era of product. AI compresses the PM cycle from weeks to hours, making it possible to run 10x more discovery, validate 10x more hypotheses, and iterate 10x faster.
+
+## What It Does
+
+- **Discover** — Socratic problem exploration with 5-layer deep questioning
+- **Define ICP** — Ideal Customer Profile with precision targeting and disqualification criteria
+- **Generate Personas** — Synthetic personas with JTBD mapping and simulated interviews
+- **Write PRDs** — Context-engineered specs that AI can implement without clarifying questions
+- **Prioritize** — Force-ranked backlog with RICE + Product Power scoring, no ties allowed
+- **Validate** — Experiment design with kill criteria before committing resources
+- **Score Problems** — Product Power Formula calculator for any opportunity
+
+## The Product Power Formula
+
+```
+Willingness to Pay = ΔState × Emotional Intensity × Problem Frequency
+```
+
+- **ΔState** (1-10): How large is the gap between current and desired state?
+- **Emotional Intensity** (1-10): How deeply does the user feel this pain?
+- **Problem Frequency** (1-10): How often does the user encounter this?
+
+| Score | Tier | Meaning |
+|-------|------|---------|
+| <100 | Low | Nice-to-have. Hard to monetize. |
+| 100-400 | Medium | Viable. Needs strong execution. |
+| 400-700 | High | Strong opportunity. Clear willingness to pay. |
+| 700+ | Exceptional | Category-defining. Build immediately. |
 
 ## Install
 
 ```bash
-npx prisma-pm@latest
+npx product-builder@latest
 ```
-
-Installs `/pm:*` slash commands into your Claude Code environment.
-
-## What It Does
-
-Prisma PM transforms product management from coordination theater into architectural thinking. Every command is grounded in a real PM job-to-be-done.
-
-**Core thesis:** Products are transformation engines. People pay for the delta between states — not for features.
 
 ## Commands
 
@@ -30,7 +61,7 @@ Prisma PM transforms product management from coordination theater into architect
 |---------|-------------|
 | `/pm:discover "problem"` | Socratic problem exploration → Discovery Brief |
 | `/pm:power "problem"` | Product Power Formula calculator (works standalone) |
-| `/pm:strategy` | RICE + Product Power → Force-ranked backlog |
+| `/pm:strategy` | RICE + Product Power → Force-ranked backlog, no ties |
 | `/pm:validate "hypothesis"` | Experiment design with kill criteria |
 
 ### Definition (run per feature)
@@ -43,58 +74,39 @@ Prisma PM transforms product management from coordination theater into architect
 | Command | What It Does |
 |---------|-------------|
 | `/pm:help` | Command reference + project state |
+| `/pm:update` | Update to latest version |
 
-## The Product Power Formula
-
-```
-Product Power = ΔState × Emotional Intensity × Problem Frequency
-```
-
-| Tier | Score | Meaning |
-|------|-------|---------|
-| Low | <100 | Nice-to-have. Hard to monetize. |
-| Medium | 100-400 | Viable. Needs strong execution. |
-| High | 400-700 | Strong opportunity. Clear willingness to pay. |
-| Exceptional | 700+ | Category-defining. Build immediately. |
-
-## How It Works
+## Architecture
 
 ```
-/pm:new → /pm:icp → /pm:persona → /pm:discover → /pm:power
-    → /pm:strategy → /pm:validate → /pm:define → /pm:require
+┌─────────────────────────────────────────┐
+│  Commands (thin routers)                │
+│  /pm:discover, /pm:define, /pm:power... │
+└──────────────────┬──────────────────────┘
+                   │
+┌──────────────────▼──────────────────────┐
+│  Workflows (cognitive engines)          │
+│  Socratic loops, RICE scoring,          │
+│  context chaining, state management     │
+└──────────────────┬──────────────────────┘
+                   │
+┌──────────────────▼──────────────────────┐
+│  Agents (deep specialists)              │
+│  Strategic Advisor, Customer Voice,     │
+│  Experiment Designer, Persona Architect │
+└─────────────────────────────────────────┘
 ```
 
 Each command reads the output of previous commands — context chains automatically. State is tracked in `.product/STATE.md`.
 
-## Project Structure
-
-After `/pm:new`, your workspace looks like:
-
-```
-.product/
-├── PRODUCT.md          # Vision, transformation thesis
-├── ICP.md              # Ideal Customer Profile
-├── BACKLOG.md          # Force-ranked initiatives
-├── STATE.md            # Current state tracker
-├── config.json         # Preferences
-├── PERSONAS/           # Synthetic personas
-├── DISCOVERY/          # Discovery briefs + validation plans
-└── DEFINITIONS/        # PRDs + requirements
-```
-
-## Frameworks
-
-Prisma PM includes reference knowledge for:
-- **Product Power Formula** — Opportunity scoring
-- **Jobs-to-be-Done** — Customer understanding
-- **RICE** — Prioritization
-- **Amazon PR/FAQ** — Working backwards
-- **Opportunity Solution Tree** — Discovery mapping
-
 ## Requirements
 
-- Claude Code (CLI)
+- [Claude Code](https://claude.ai/code) (CLI)
 - Node.js >= 18
+
+## From Latin America
+
+**#VamosLatam** · [getprisma.lat](https://getprisma.lat/product-builder)
 
 ## License
 

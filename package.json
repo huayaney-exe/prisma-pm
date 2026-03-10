@@ -1,9 +1,9 @@
 {
-  "name": "prisma-pm",
+  "name": "product-builder",
   "version": "0.2.0",
   "description": "AI-native product management skills for Claude Code. Context engineering for PMs who build.",
   "bin": {
-    "prisma-pm": "./bin/install.js"
+    "product-builder": "./bin/install.js"
   },
   "files": [
     "bin/",
