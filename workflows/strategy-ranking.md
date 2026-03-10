@@ -6,6 +6,15 @@ Rank all initiatives in the backlog using RICE scoring enhanced with Product Pow
 Read all files referenced by the invoking command's execution_context before starting.
 </required_reading>
 
+<freeform_rule>
+When the user wants to explain freely, STOP using AskUserQuestion.
+
+If a user selects "Other" and their response signals freeform intent (e.g., "let me describe it", "I'll explain", "something else"), you MUST:
+1. Ask your follow-up as plain text — NOT via AskUserQuestion
+2. Wait for them to type at the normal prompt
+3. Resume AskUserQuestion only after processing their freeform response
+</freeform_rule>
+
 <process>
 
 ## 1. Setup
@@ -71,67 +80,61 @@ For each initiative, pull data from discovery brief where available. For missing
 
 `RICE = (Reach × Impact × Confidence) / Effort`
 
-Present scoring as a table for user input:
+For each initiative missing RICE data, use AskUserQuestion to collect scores:
+
+Use AskUserQuestion:
+- header: "Reach"
+- question: "How many users will '{initiative name}' impact per quarter?"
+- options:
+  - "< 100" — Niche, small user base
+  - "100-1K" — Moderate reach
+  - "1K-10K" — Broad reach across segments
+  - "10K+" — Platform-wide impact
+
+Use AskUserQuestion:
+- header: "Impact"
+- question: "How much will '{initiative name}' move the needle per user?"
+- options:
+  - "0.25: Minimal" — Barely noticeable improvement
+  - "0.5: Low" — Nice to have, not essential
+  - "1: Medium" — Meaningful improvement
+  - "2: High" — Significant workflow change
+  - "3: Massive" — Transformative for the user
+
+Use AskUserQuestion:
+- header: "Confidence"
+- question: "How confident are you in these estimates for '{initiative name}'?"
+- options:
+  - "< 50%: Low" — Gut feeling, no data
+  - "50-75%: Medium" — Some signals, needs validation
+  - "75-95%: High" — Strong evidence from research
+  - "95%+: Certain" — Validated with real users
+
+Use AskUserQuestion:
+- header: "Effort"
+- question: "How much work is '{initiative name}'?"
+- options:
+  - "< 1 month" — Small feature or experiment
+  - "1-3 months" — Medium project, one team
+  - "3-6 months" — Large initiative, cross-team
+  - "6+ months" — Major platform investment
+
+Present the completed table after collecting all scores:
 
 ```
 | Initiative | Reach | Impact | Confidence | Effort | RICE |
 |------------|-------|--------|------------|--------|------|
-| {name 1} | ? | ? | ? | ? | — |
-| {name 2} | ? | ? | ? | ? | — |
+| {name 1} | {val} | {val} | {val} | {val} | {score} |
+| {name 2} | {val} | {val} | {val} | {val} | {score} |
 ```
 
-For each initiative, use AskUserQuestion to collect RICE factors:
-
-Use AskUserQuestion:
-- header: "Reach"
-- question: "How many users will {initiative name} impact per quarter?"
-- options:
-  - "< 100" — Small user base or niche feature
-  - "100-1K" — Moderate reach within core segment
-  - "1K-10K" — Broad impact across segments
-  - "10K+" — Affects most of the user base
-
-Use AskUserQuestion:
-- header: "Impact"
-- question: "How much will {initiative name} improve things for those users?"
-- options:
-  - "Minimal (0.25)" — Barely noticeable improvement
-  - "Low (0.5)" — Nice to have, minor quality of life
-  - "Medium (1)" — Meaningful improvement to workflow
-  - "Massive (3)" — Transformative, changes how they work
-
-Use AskUserQuestion:
-- header: "Confidence"
-- question: "How confident are you in these estimates for {initiative name}?"
-- options:
-  - "Low (50%)" — Gut feel, no data
-  - "Medium (80%)" — Some evidence, reasonable assumption
-  - "High (100%)" — Strong data, validated hypothesis
-
-Use AskUserQuestion:
-- header: "Effort"
-- question: "How much work is {initiative name}?"
-- options:
-  - "Small (0.5 mo)" — Quick win, days of work
-  - "Medium (1-2 mo)" — Significant but bounded
-  - "Large (3-6 mo)" — Major investment
-  - "Huge (6+ mo)" — Multi-quarter effort
-
-<freeform_rule>
-When the user wants to explain freely, STOP using AskUserQuestion.
-
-If a user selects "Other" and their response signals freeform intent, you MUST:
-1. Ask your follow-up as plain text — NOT via AskUserQuestion
-2. Wait for them to type at the normal prompt
-3. Resume AskUserQuestion only after processing their freeform response
-</freeform_rule>
 </step>
 
 <step name="power-scoring">
 ### Product Power
 
 If discovery brief exists → use the power score from the brief.
-If no brief → run quick inline scoring using AskUserQuestion for each dimension:
+If no brief → run quick inline scoring:
 
 Use AskUserQuestion:
 - header: "ΔState"
@@ -201,10 +204,6 @@ Sort by composite score. Break ties:
 Present the ranked table:
 
 ```
-╔══════════════════════════════════════════════════════════════╗
-║  CHECKPOINT: Decision Required                               ║
-╚══════════════════════════════════════════════════════════════╝
-
 | Rank | Initiative | Power | RICE | Align | Composite |
 |------|-----------|-------|------|-------|-----------|
 | 1 | {name} | {score} | {score} | {1-5} | {score} |
@@ -224,8 +223,8 @@ Use AskUserQuestion:
   - "Adjust scores" — I want to change specific scores
   - "Override" — I'll set the ranking manually
 
-**If "Adjust scores":** Ask which initiative and which factor to re-score using AskUserQuestion, then re-rank.
-**If "Override":** Switch to plain text — ask the user to describe their preferred ranking. Document the override reason.
+**If "Adjust scores":** Re-collect specific scores and re-rank.
+**If "Override":** Accept manual ranking but document the override reason.
 **If "Approved":** Proceed to write.
 
 ## 8. Update Backlog
