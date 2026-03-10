@@ -49,31 +49,51 @@ Wait for them to reframe as a problem. If they insist on the solution framing, n
 
 ## 4. Socratic Discovery (5 Layers)
 
-Ask ONE AT A TIME. Follow threads — each answer opens new areas to explore.
+**CRITICAL INTERACTION RULE:** You MUST use the `AskUserQuestion` tool for EVERY question below. Do NOT output questions as plain text. Do NOT continue without receiving the user's actual response via the tool. Ask each question ONE AT A TIME — call `AskUserQuestion`, wait for the response, then proceed to the next question. Follow threads — each answer opens new areas to explore. If an answer is vague, use `AskUserQuestion` again to probe deeper before moving on.
 
 <step name="pain">
 **Layer 1 — The Pain**
-"Describe the undesired state in concrete terms. Not 'users are frustrated' — what specifically happens that's bad? What does failure look like?"
+Use `AskUserQuestion` with question: "Describe the undesired state in concrete terms. Not 'users are frustrated' — what specifically happens that's bad? What does failure look like?"
+Provide these options as thought-starters:
+- Option 1: "Process failure" — "A workflow or process breaks down or is too slow"
+- Option 2: "Information gap" — "Users lack data or visibility they need"
+- Option 3: "Cost/waste" — "Resources (time, money, effort) are being wasted"
 </step>
 
 <step name="who">
 **Layer 2 — The Who**
-"Who experiences this most intensely? Connect to your ICP: {reference ICP.md summary}. Is this a primary segment or edge case?"
+Use `AskUserQuestion` with question: "Who experiences this most intensely? Connect to your ICP: {reference ICP.md summary}. Is this a primary segment or edge case?"
+Provide these options:
+- Option 1: "Primary ICP segment" — "Core target user, this is their daily pain"
+- Option 2: "Secondary segment" — "Adjacent user who also feels it but less intensely"
+- Option 3: "Edge case" — "Niche scenario, not the main audience"
 </step>
 
 <step name="frequency">
 **Layer 3 — The Frequency & Context**
-"How often does this happen? In what context — what are they trying to do when they hit this problem? Walk me through the scenario."
+Use `AskUserQuestion` with question: "How often does this happen? In what context — what are they trying to do when they hit this problem? Walk me through the scenario."
+Provide these options:
+- Option 1: "Daily or constant" — "Part of their routine, unavoidable"
+- Option 2: "Weekly" — "Comes up regularly in specific workflows"
+- Option 3: "Monthly or less" — "Occasional but painful when it hits"
 </step>
 
 <step name="workarounds">
 **Layer 4 — Current Workarounds**
-"What do people do today when they hit this problem? Manual workarounds, competitor tools, or just accept the pain? What's the cost of the workaround?"
+Use `AskUserQuestion` with question: "What do people do today when they hit this problem? Manual workarounds, competitor tools, or just accept the pain? What's the cost of the workaround?"
+Provide these options as thought-starters:
+- Option 1: "Competitor tools" — "They use existing products but those fall short"
+- Option 2: "Manual workarounds" — "Spreadsheets, duct-tape processes, human labor"
+- Option 3: "They just suffer" — "No real alternative exists, they accept the pain"
 </step>
 
 <step name="transformation">
 **Layer 5 — The Transformation**
-"If this problem were perfectly solved, what would change for the user? How would their life/work be different? What would they be able to do that they can't today?"
+Use `AskUserQuestion` with question: "If this problem were perfectly solved, what would change for the user? How would their life/work be different? What would they be able to do that they can't today?"
+Provide these options as thought-starters:
+- Option 1: "Time savings" — "Hours freed up, faster outcomes"
+- Option 2: "Better outcomes" — "Higher quality results, fewer errors"
+- Option 3: "New possibilities" — "They can do things that were impossible before"
 </step>
 
 ## 5. Agent Analysis
@@ -222,6 +242,8 @@ assumptions_count: {N}
 
 ## 7. Checkpoint: Review
 
+Display the Discovery Brief summary, then use `AskUserQuestion` to get approval:
+
 ```
 ╔══════════════════════════════════════════════════════════════╗
 ║  CHECKPOINT: Review Required                                 ║
@@ -233,13 +255,14 @@ Discovery Brief Summary:
 - JTBD: {functional job}
 - Assumptions: {count} identified
 - Blind Spots: {count} flagged
-
-──────────────────────────────────────────────────────────────
-→ Type "approved" or describe changes
-──────────────────────────────────────────────────────────────
 ```
 
-If changes: update brief. Loop until approved (max 3 iterations).
+Use `AskUserQuestion` with question: "Review the Discovery Brief above. Do you approve?"
+Provide these options:
+- Option 1: "Approved" — "Everything looks good, proceed"
+- Option 2: "Needs changes" — "I'll describe what to adjust (use Other)"
+
+If "Needs changes" or custom input: update brief accordingly and ask again. Loop until approved (max 3 iterations).
 
 ## 8. Update State
 
