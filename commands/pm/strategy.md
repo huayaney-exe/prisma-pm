@@ -20,6 +20,7 @@ Rank all initiatives using RICE + Product Power composite scoring. Force-ranked 
 
 <execution_context>
 @prisma-pm/workflows/strategy-ranking.md
+@prisma-pm/references/questioning.md
 @prisma-pm/skill/rules/philosophy.md
 @prisma-pm/references/ui-brand.md
 @prisma-pm/frameworks/rice.md

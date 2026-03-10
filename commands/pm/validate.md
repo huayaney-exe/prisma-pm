@@ -21,6 +21,7 @@ Design fast validation experiments with clear kill criteria. Prevents the "build
 
 <execution_context>
 @prisma-pm/workflows/validate-hypothesis.md
+@prisma-pm/references/questioning.md
 @prisma-pm/skill/rules/philosophy.md
 @prisma-pm/references/ui-brand.md
 @prisma-pm/agents/experiment-designer.md

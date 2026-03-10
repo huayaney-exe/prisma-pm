@@ -19,6 +19,7 @@ Define the Ideal Customer Profile for the product. Feeds all downstream work —
 
 <execution_context>
 @prisma-pm/workflows/icp-definition.md
+@prisma-pm/references/questioning.md
 @prisma-pm/skill/rules/philosophy.md
 @prisma-pm/references/ui-brand.md
 @prisma-pm/templates/icp-profile.md

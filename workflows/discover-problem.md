@@ -1,5 +1,5 @@
 <purpose>
-Explore a problem space through Socratic questioning and multi-agent analysis. This is the core PM discovery workflow — understand before solving. Spawns customer-voice and strategic-advisor agents for deep analysis. Produces a Discovery Brief with JTBD analysis, Product Power score, and assumptions to validate.
+Explore a problem space through thinking-partner questioning and multi-agent analysis. This is the core PM discovery workflow — understand before solving. Spawns customer-voice and strategic-advisor agents for deep analysis. Produces a Discovery Brief with JTBD analysis, Product Power score, and assumptions to validate.
 </purpose>
 
 <required_reading>
@@ -47,58 +47,81 @@ Wait for them to reframe as a problem. If they insist on the solution framing, n
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-## 4. Socratic Discovery (5 Layers)
+## 4. Thinking-Partner Discovery
 
-**CRITICAL INTERACTION RULE:** You MUST use the `AskUserQuestion` tool for EVERY question below. Do NOT output questions as plain text. Do NOT continue without receiving the user's actual response via the tool. Ask each question ONE AT A TIME — call `AskUserQuestion`, wait for the response, then proceed to the next question. Follow threads — each answer opens new areas to explore. If an answer is vague, use `AskUserQuestion` again to probe deeper before moving on.
+### AskUserQuestion Format Rules
 
-<step name="pain">
-**Layer 1 — The Pain**
-Use `AskUserQuestion` with question: "Describe the undesired state in concrete terms. Not 'users are frustrated' — what specifically happens that's bad? What does failure look like?"
-Provide these options as thought-starters:
-- Option 1: "Process failure" — "A workflow or process breaks down or is too slow"
-- Option 2: "Information gap" — "Users lack data or visibility they need"
-- Option 3: "Cost/waste" — "Resources (time, money, effort) are being wasted"
-</step>
+Every `AskUserQuestion` call in this workflow MUST follow these rules:
+- **header**: max 12 characters
+- **options**: 2-4 concrete options, each with a short label + description
+- **options style**: interpretations or examples, NOT generic categories — give the user something specific to react to
+- Always include an "Other" option so the user can go off-script
 
-<step name="who">
-**Layer 2 — The Who**
-Use `AskUserQuestion` with question: "Who experiences this most intensely? Connect to your ICP: {reference ICP.md summary}. Is this a primary segment or edge case?"
-Provide these options:
-- Option 1: "Primary ICP segment" — "Core target user, this is their daily pain"
-- Option 2: "Secondary segment" — "Adjacent user who also feels it but less intensely"
-- Option 3: "Edge case" — "Niche scenario, not the main audience"
-</step>
+<freeform_rule>
+When the user wants to explain freely, STOP using AskUserQuestion.
 
-<step name="frequency">
-**Layer 3 — The Frequency & Context**
-Use `AskUserQuestion` with question: "How often does this happen? In what context — what are they trying to do when they hit this problem? Walk me through the scenario."
-Provide these options:
-- Option 1: "Daily or constant" — "Part of their routine, unavoidable"
-- Option 2: "Weekly" — "Comes up regularly in specific workflows"
-- Option 3: "Monthly or less" — "Occasional but painful when it hits"
-</step>
+If a user selects "Other" and their response signals they want to describe something in their own words (e.g., "let me describe it", "I'll explain", "something else", or any open-ended reply that isn't choosing/modifying an existing option), you MUST:
+1. Ask your follow-up as plain text — NOT via AskUserQuestion
+2. Wait for them to type at the normal prompt
+3. Resume AskUserQuestion only after processing their freeform response
+</freeform_rule>
 
-<step name="workarounds">
-**Layer 4 — Current Workarounds**
-Use `AskUserQuestion` with question: "What do people do today when they hit this problem? Manual workarounds, competitor tools, or just accept the pain? What's the cost of the workaround?"
-Provide these options as thought-starters:
-- Option 1: "Competitor tools" — "They use existing products but those fall short"
-- Option 2: "Manual workarounds" — "Spreadsheets, duct-tape processes, human labor"
-- Option 3: "They just suffer" — "No real alternative exists, they accept the pain"
-</step>
+### Opening Question
 
-<step name="transformation">
-**Layer 5 — The Transformation**
-Use `AskUserQuestion` with question: "If this problem were perfectly solved, what would change for the user? How would their life/work be different? What would they be able to do that they can't today?"
-Provide these options as thought-starters:
-- Option 1: "Time savings" — "Hours freed up, faster outcomes"
-- Option 2: "Better outcomes" — "Higher quality results, fewer errors"
-- Option 3: "New possibilities" — "They can do things that were impossible before"
-</step>
+Start with an open freeform question as **plain text** (NOT AskUserQuestion):
+
+> Tell me about this problem. What's going wrong, for whom, and why does it matter? Just talk — I'll follow up.
+
+Wait for their response.
+
+### Follow the Thread
+
+After the opening response, shift to `AskUserQuestion` to follow threads. Use the **background context checklist** below to track what you've covered — but do NOT walk through it in order. Weave questions naturally based on what the user just said.
+
+**Background Context Checklist** (track internally, not shown to user):
+- [ ] **Pain** — concrete undesired state, what failure looks like
+- [ ] **Who** — specific person/role, connection to ICP
+- [ ] **Frequency** — how often, in what context/workflow
+- [ ] **Workarounds** — what they do today, cost of workaround
+- [ ] **Transformation** — what "solved" looks like, what changes
+
+**How to follow threads:**
+
+After each answer, pick the most interesting thread to pull. Craft `AskUserQuestion` options that are specific interpretations or examples based on what the user just said — not generic buckets.
+
+Example — if the user mentions "our sales team wastes time on bad leads":
+
+```
+AskUserQuestion:
+  header: "Bad leads"
+  question: "When you say 'bad leads' — what makes a lead bad? Where does the breakdown happen?"
+  options:
+    - "Wrong fit" — They look good on paper but don't match your ICP once you dig in
+    - "Not ready" — They're in your ICP but haven't hit the pain point yet
+    - "Junk data" — The lead info itself is incomplete or wrong
+    - "Other" — I'll describe it
+```
+
+Continue asking follow-up questions until you've covered at least 4 of the 5 checklist items. Each question should build on the previous answer, not jump to an unrelated topic. When a checklist item is naturally covered by something the user already said, check it off — don't ask redundantly.
+
+### Decision Gate
+
+Once you believe you have enough context (4+ checklist items covered), present the decision gate:
+
+Use `AskUserQuestion`:
+- header: "Ready?"
+- question: "I think I have enough context to analyze this problem. Ready for deep analysis?"
+- options:
+  - "Analyze it" — Spawn customer-voice and strategic-advisor agents
+  - "Keep exploring" — I want to share more / ask me more
+
+If "Keep exploring": continue the conversation — ask what else is on their mind, or probe the uncovered checklist items. Loop back to this gate when ready.
+
+If "Analyze it": proceed to Agent Analysis.
 
 ## 5. Agent Analysis
 
-After collecting all 5 layers, spawn two agents in parallel for deeper analysis:
+After the decision gate, spawn two agents in parallel for deeper analysis:
 
 ```
 ◆ Spawning 2 agents in parallel...
@@ -115,11 +138,7 @@ Agent(
 
 <discovery_context>
 Problem: {user's problem description}
-Layer 1 (Pain): {answer}
-Layer 2 (Who): {answer}
-Layer 3 (Frequency): {answer}
-Layer 4 (Workarounds): {answer}
-Layer 5 (Transformation): {answer}
+{All discovery answers collected during thinking-partner conversation, organized by checklist item}
 </discovery_context>
 
 <icp_context>
@@ -153,7 +172,7 @@ Agent(
 
 <discovery_context>
 Problem: {user's problem description}
-Layer 1-5 answers: {all answers}
+{All discovery answers collected during thinking-partner conversation}
 </discovery_context>
 
 <product_context>
@@ -242,7 +261,7 @@ assumptions_count: {N}
 
 ## 7. Checkpoint: Review
 
-Display the Discovery Brief summary, then use `AskUserQuestion` to get approval:
+Display the Discovery Brief summary:
 
 ```
 ╔══════════════════════════════════════════════════════════════╗
@@ -257,12 +276,14 @@ Discovery Brief Summary:
 - Blind Spots: {count} flagged
 ```
 
-Use `AskUserQuestion` with question: "Review the Discovery Brief above. Do you approve?"
-Provide these options:
-- Option 1: "Approved" — "Everything looks good, proceed"
-- Option 2: "Needs changes" — "I'll describe what to adjust (use Other)"
+Use `AskUserQuestion`:
+- header: "Review"
+- question: "Discovery Brief complete. Power: {score} ({tier}). Approve?"
+- options:
+  - "Approved" — Looks good, proceed
+  - "Needs changes" — I'll describe what to adjust
 
-If "Needs changes" or custom input: update brief accordingly and ask again. Loop until approved (max 3 iterations).
+If "Needs changes": update brief accordingly and present this checkpoint again. Loop until approved (max 3 iterations).
 
 ## 8. Update State
 
@@ -313,13 +334,15 @@ Display Product Power score using ui-brand.md score display format.
 <success_criteria>
 
 - [ ] Anti-pattern check performed (solution vs. problem framing)
-- [ ] 5-layer Socratic questioning completed
+- [ ] Thinking-partner discovery completed (4+ checklist items covered)
+- [ ] Freeform rule respected — plain text used when user wants to explain freely
+- [ ] Decision gate presented before spawning agents
 - [ ] Customer-voice agent spawned and returned JTBD analysis
 - [ ] Strategic-advisor agent spawned and returned assumption audit
 - [ ] Product Power Score calculated with justifications
 - [ ] Discovery brief written with all sections populated
 - [ ] Assumptions identified with risk levels and validation methods
-- [ ] Checkpoint: user reviewed and approved
+- [ ] Checkpoint: user reviewed and approved via AskUserQuestion
 - [ ] BACKLOG.md updated with new initiative
 - [ ] STATE.md updated
 - [ ] Next-up block displayed

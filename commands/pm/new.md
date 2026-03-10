@@ -24,6 +24,7 @@ Initialize a new product management workspace. Entry point for all Prisma PM wor
 
 <execution_context>
 @prisma-pm/workflows/new-product.md
+@prisma-pm/references/questioning.md
 @prisma-pm/skill/rules/philosophy.md
 @prisma-pm/references/ui-brand.md
 @prisma-pm/templates/product-vision.md

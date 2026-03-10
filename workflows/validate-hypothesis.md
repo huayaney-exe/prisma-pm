@@ -49,8 +49,19 @@ Use AskUserQuestion:
 
 **If standalone (no discovery brief):**
 
-Ask inline:
+Ask as plain text:
 "What assumption do you need to validate? Frame it as: 'We believe {assumption}. If true, {consequence}. If false, {alternative}.'"
+
+Wait for the user to respond at the normal prompt before continuing.
+
+<freeform_rule>
+When the user wants to explain freely, STOP using AskUserQuestion.
+
+If a user selects "Other" and their response signals freeform intent (e.g., "let me describe it", "I'll explain", "something else"), you MUST:
+1. Ask your follow-up as plain text — NOT via AskUserQuestion
+2. Wait for them to type at the normal prompt
+3. Resume AskUserQuestion only after processing their freeform response
+</freeform_rule>
 
 ## 4. Hypothesis Structuring
 
@@ -64,17 +75,14 @@ For each selected assumption, structure a testable hypothesis:
 **within** {timeframe}
 ```
 
-```
-╔══════════════════════════════════════════════════════════════╗
-║  CHECKPOINT: Review Required                                 ║
-╚══════════════════════════════════════════════════════════════╝
+Present the structured hypothesis, then ask for approval:
 
-Hypothesis: {structured hypothesis}
-
-──────────────────────────────────────────────────────────────
-→ Type "approved" or refine the hypothesis
-──────────────────────────────────────────────────────────────
-```
+Use AskUserQuestion:
+- header: "Review"
+- question: "Hypothesis: '{We believe ... will ... because ...}'. Approve?"
+- options:
+  - "Approved" — Looks good, proceed
+  - "Needs changes" — I'll describe what to adjust
 
 Loop until approved (max 3 iterations).
 
@@ -280,3 +288,4 @@ If success criteria are met → `/pm:define "{slug}"`
 - [ ] Next-up block displayed with clear decision guidance
 
 </success_criteria>
+</output>

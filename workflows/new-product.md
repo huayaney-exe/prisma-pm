@@ -1,10 +1,22 @@
 <purpose>
-Initialize a new product management workspace through Socratic questioning. This is the most leveraged moment in PM work — deep questioning here means better discovery, better definitions, better outcomes. One workflow takes you from idea to a scaffolded .product/ workspace with vision, transformation thesis, and Product Power score.
+Initialize a new product management workspace through deep, adaptive questioning. This is the most leveraged moment in PM work — the quality of questioning here determines everything downstream. One workflow takes you from idea to a scaffolded .product/ workspace with vision, transformation thesis, and Product Power score.
 </purpose>
 
 <required_reading>
 Read all files referenced by the invoking command's execution_context before starting.
+See also: @prisma-pm/references/questioning.md for the GSD questioning philosophy.
 </required_reading>
+
+<freeform_rule>
+When the user wants to explain freely, STOP using AskUserQuestion.
+
+If a user selects "Other" and their response signals they want to describe something in their own words (e.g., "let me describe it", "I'll explain", "something else", or any open-ended reply that isn't choosing/modifying an existing option), you MUST:
+1. Ask your follow-up as plain text — NOT via AskUserQuestion
+2. Wait for them to type at the normal prompt
+3. Resume AskUserQuestion only after processing their freeform response
+
+The same applies if YOU include a freeform-indicating option (like "Let me explain") and the user selects it.
+</freeform_rule>
 
 <process>
 
@@ -34,7 +46,7 @@ Product workspace already exists at .product/
 
 "What's the name of your product?"
 
-## 2. Deep Questioning
+## 2. Deep Questioning — Thinking Partner Approach
 
 **Display stage banner:**
 
@@ -44,69 +56,148 @@ Product workspace already exists at .product/
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-**CRITICAL INTERACTION RULE:** You MUST use the `AskUserQuestion` tool for EVERY question below. Do NOT output questions as plain text. Do NOT continue without receiving the user's actual response via the tool. Ask each question ONE AT A TIME — call `AskUserQuestion`, wait for the response, then proceed to the next question. Follow threads — each answer may reveal something worth exploring deeper. If an answer is vague, use `AskUserQuestion` again to probe deeper before moving on.
+### Philosophy
 
-<step name="transformation">
-**Q1 — The Transformation**
-Use `AskUserQuestion` with question: "What transformation does this product enable? Describe the undesired state your users are in today, and the preferred state your product moves them toward."
-The user must type their answer via "Other" (freeform). Provide these options as thought-starters only:
-- Option 1: "Efficiency gain" — "Users waste time/effort on something that could be faster"
-- Option 2: "Pain elimination" — "Users suffer from a specific problem with no good solution"
-- Option 3: "New capability" — "Users can't do something today that they need to do"
+You are a thinking partner, NOT a checklist walker. The goal is to deeply understand the product vision through natural conversation. You have six dimensions to cover, but you weave through them organically based on what the user shares — not by marching Q1 through Q6.
 
-If the answer is vague, probe with another `AskUserQuestion`: "Make it concrete — what specifically is bad about today? What specifically is better after?"
-</step>
+### Background Context Checklist
 
-<step name="who">
-**Q2 — The Who**
-Use `AskUserQuestion` with question: "Who specifically experiences this pain? Not 'everyone' — the person who feels this most intensely. What's their role, context, circumstance?"
-Provide these options as thought-starters:
-- Option 1: "Technical role" — "Developer, engineer, data scientist, etc."
-- Option 2: "Business role" — "Manager, founder, analyst, marketer, etc."
-- Option 3: "End consumer" — "Individual user, shopper, learner, etc."
-</step>
+Track which dimensions have been covered. You do NOT show this to the user. It is your internal guide to know what still needs exploring.
 
-<step name="intensity">
-**Q3 — The Pain Intensity**
-Use `AskUserQuestion` with question: "On a scale of 1-10, how painful is their current state? What evidence supports your rating?"
-Provide these options:
-- Option 1: "1-3: Minor inconvenience" — "Annoying but livable, they work around it easily"
-- Option 2: "4-6: Significant friction" — "Slows them down noticeably, they actively complain"
-- Option 3: "7-9: Critical pain" — "Blocks key workflows, costs real money or time"
-- Option 4: "10: Existential threat" — "Business or livelihood at risk without a solution"
-</step>
+- [ ] **Transformation** — What before/after state does this product create?
+- [ ] **Who** — Who specifically feels this pain most acutely?
+- [ ] **Intensity** — How painful is the current state (1-10)?
+- [ ] **Frequency** — How often do they encounter this problem (1-10)?
+- [ ] **Landscape** — What do people use today? What's broken about it?
+- [ ] **Advantage** — What makes this solution fundamentally better?
 
-<step name="frequency">
-**Q4 — The Frequency**
-Use `AskUserQuestion` with question: "How often do they encounter this problem?"
-Provide these options:
-- Option 1: "Rarely (yearly)" — "Rating: 1-2"
-- Option 2: "Regularly (monthly)" — "Rating: 3-5"
-- Option 3: "Frequently (weekly)" — "Rating: 6-8"
-- Option 4: "Constantly (always present)" — "Rating: 9-10"
-</step>
+### Opening: Freeform Start
 
-<step name="landscape">
-**Q5 — The Landscape**
-Use `AskUserQuestion` with question: "What do people use today to solve this? Competitors, manual workarounds, or do they just suffer? What's broken about current solutions?"
-Provide these options as thought-starters:
-- Option 1: "Competitor tools" — "They use existing products but those fall short"
-- Option 2: "Manual workarounds" — "Spreadsheets, duct-tape processes, human labor"
-- Option 3: "They just suffer" — "No real alternative exists, they accept the pain"
-</step>
+Begin with a plain text question (NOT AskUserQuestion):
 
-<step name="advantage">
-**Q6 — The Advantage**
-Use `AskUserQuestion` with question: "What will make your solution fundamentally better? Not incrementally — what makes the old way feel broken once they try yours?"
-Provide these options as thought-starters:
-- Option 1: "Speed/automation" — "10x faster than manual or existing tools"
-- Option 2: "Simplicity" — "Dramatically easier to use than alternatives"
-- Option 3: "New approach" — "Solves the problem in a fundamentally different way"
-</step>
+> "Tell me about {Product Name} — what do you want to build, and why does it need to exist?"
+
+This is intentionally open-ended. Let them talk. Their answer will likely touch on multiple dimensions at once. Parse what they share and check off any dimensions their answer already covers.
+
+### Following Threads
+
+After the opening answer, identify:
+1. Which dimensions their answer already addressed (even partially)
+2. Which dimensions remain uncovered
+3. Which parts of their answer deserve deeper exploration
+
+Then continue the conversation adaptively. Use AskUserQuestion for structured choices where options genuinely help the user think. Use plain text for open-ended follow-ups where structure would constrain them.
+
+**Guidelines for when to use AskUserQuestion vs plain text:**
+- Use AskUserQuestion when offering distinct directions to explore (structured choices help)
+- Use plain text when probing deeper into something they said (freeform is better)
+- Use plain text when their previous answer was rich and you want to reflect back and ask a follow-up
+- Always respect the freeform_rule above
+
+### Dimension-Specific Guidance
+
+When you need to cover a dimension not yet addressed, use these patterns. Adapt the wording to fit the conversation flow — do not use these verbatim if it would feel robotic.
+
+<dimension name="transformation">
+**Transformation** — The before/after state.
+
+If not yet covered, use AskUserQuestion:
+- header: "Transform"
+- question: "What transformation does {Product Name} enable? What's the undesired state today, and what's the preferred state after?"
+- options:
+  - "Efficiency gain" — Users waste time/effort on something that could be faster
+  - "Pain removal" — Users suffer from a specific problem with no good solution
+  - "New capability" — Users can't do something today that they need to do
+  - "Let me explain" — I'll describe the transformation in my own words
+
+If they select "Let me explain" or their answer is vague, follow up in plain text: "Make it concrete — what specifically is bad about today? What specifically is better after?"
+</dimension>
+
+<dimension name="who">
+**Who** — The person who feels this most intensely.
+
+If not yet covered, use AskUserQuestion:
+- header: "Who"
+- question: "Who specifically experiences this pain? Not 'everyone' — the person who feels it most. What's their role, context, situation?"
+- options:
+  - "Technical role" — Developer, engineer, data scientist, etc.
+  - "Business role" — Manager, founder, analyst, marketer, etc.
+  - "End consumer" — Individual user, shopper, learner, etc.
+  - "Let me explain" — I have a specific person in mind
+</dimension>
+
+<dimension name="intensity">
+**Intensity** — How painful the current state is.
+
+If not yet covered, use AskUserQuestion:
+- header: "Intensity"
+- question: "How painful is their current situation? What evidence supports your rating?"
+- options:
+  - "1-3: Mild" — Annoying but livable, they work around it easily
+  - "4-6: Significant" — Slows them down, they actively complain
+  - "7-9: Critical" — Blocks key workflows, costs real money or time
+  - "10: Existential" — Business or livelihood at risk without a solution
+</dimension>
+
+<dimension name="frequency">
+**Frequency** — How often the problem occurs.
+
+If not yet covered, use AskUserQuestion:
+- header: "Frequency"
+- question: "How often do they hit this problem?"
+- options:
+  - "Rarely (yearly)" — Rating: 1-2
+  - "Monthly" — Rating: 3-5
+  - "Weekly" — Rating: 6-8
+  - "Constantly" — Rating: 9-10, always present
+</dimension>
+
+<dimension name="landscape">
+**Landscape** — Current alternatives and their shortcomings.
+
+If not yet covered, use AskUserQuestion:
+- header: "Landscape"
+- question: "What do people use today to deal with this? What's broken about those solutions?"
+- options:
+  - "Competitor tools" — They use existing products but those fall short
+  - "Manual workarounds" — Spreadsheets, duct-tape processes, human labor
+  - "They just suffer" — No real alternative exists, they accept the pain
+  - "Let me explain" — I know the landscape well
+</dimension>
+
+<dimension name="advantage">
+**Advantage** — The fundamental differentiator.
+
+If not yet covered, use AskUserQuestion:
+- header: "Advantage"
+- question: "What will make your solution fundamentally better? Not incrementally — what makes the old way feel broken once they try yours?"
+- options:
+  - "Speed/automation" — 10x faster than manual or existing tools
+  - "Simplicity" — Dramatically easier to use than alternatives
+  - "New approach" — Solves the problem in a fundamentally different way
+  - "Let me explain" — I have a specific insight
+</dimension>
+
+### Completion Check
+
+Once all six dimensions are covered, briefly summarize your understanding back to the user in plain text. Then proceed to the decision gate.
+
+### Decision Gate — Ready to Create
+
+Use AskUserQuestion:
+- header: "Ready?"
+- question: "I have a clear picture of your product vision. Ready to create PRODUCT.md?"
+- options:
+  - "Create PRODUCT.md" — Let's move forward
+  - "Keep exploring" — I want to share more / ask me more
+
+If "Keep exploring": identify which dimensions feel thin or have gaps. Probe naturally with follow-up questions (plain text or AskUserQuestion as appropriate). Loop back to this gate when you've gathered more.
+
+Continue until "Create PRODUCT.md" is selected.
 
 ## 3. Scaffold Workspace
 
-After collecting all answers, scaffold the workspace:
+After the user confirms, scaffold the workspace:
 
 ```bash
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs scaffold "{Product Name}"
@@ -114,16 +205,16 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs scaffold "{Product Name}"
 
 ## 4. Calculate Product Power
 
-Using the user's ratings, calculate the Product Power Score:
+Using the user's answers, calculate the Product Power Score:
 
 ```
 Product Power = ΔState × Emotional Intensity × Problem Frequency
 ```
 
 Score the three dimensions (each 1-10) based on user answers:
-- **ΔState**: From Q3 (pain intensity = magnitude of transformation)
-- **Emotional Intensity**: Derived from Q1 + Q3 (how viscerally they feel it)
-- **Problem Frequency**: From Q4
+- **ΔState**: From intensity + transformation answers (magnitude of the change)
+- **Emotional Intensity**: Derived from transformation + intensity answers (how viscerally they feel it)
+- **Problem Frequency**: From frequency answers
 
 Determine tier:
 
@@ -152,7 +243,7 @@ created: "{ISO date}"
 **To**: {preferred state — verbatim from user}
 
 ## Target User
-{Who experiences this pain — from Q2}
+{Who experiences this pain — from questioning}
 
 ## Product Power Score
 - **ΔState**: {1-10} — {justification}
@@ -161,10 +252,10 @@ created: "{ISO date}"
 - **Score**: {product} — **{tier}**
 
 ## Current Landscape
-{From Q5 — what exists today}
+{What exists today and why it falls short}
 
 ## Unique Advantage
-{From Q6 — why this product wins}
+{Why this product wins — the fundamental differentiator}
 
 ## Open Questions
 {Any gaps or uncertainties identified during questioning}
@@ -174,7 +265,7 @@ Do not compress. Capture everything gathered.
 
 ## 6. Checkpoint: Review
 
-Display the Product Power Score using ui-brand.md score display format, then use `AskUserQuestion` to get approval:
+Display the Product Power Score using ui-brand.md score display format, then present the review gate:
 
 ```
 ╔══════════════════════════════════════════════════════════════╗
@@ -182,12 +273,14 @@ Display the Product Power Score using ui-brand.md score display format, then use
 ╚══════════════════════════════════════════════════════════════╝
 ```
 
-Use `AskUserQuestion` with question: "Review the Product Power Score and PRODUCT.md above. Do you approve?"
-Provide these options:
-- Option 1: "Approved" — "Everything looks good, proceed"
-- Option 2: "Needs changes" — "I'll describe what to adjust (use Other)"
+Use AskUserQuestion:
+- header: "Review"
+- question: "Product Power Score: {score} ({tier}). Does the PRODUCT.md look good?"
+- options:
+  - "Approved" — Looks good, proceed
+  - "Needs changes" — I'll describe what to adjust
 
-If "Needs changes" or custom input: update PRODUCT.md accordingly and ask again. Loop until approved (max 3 iterations).
+If "Needs changes": switch to plain text and ask what they want to adjust. Update PRODUCT.md accordingly. Then present this review gate again. Loop until approved (max 3 iterations).
 
 ## 7. Update State
 
@@ -240,12 +333,16 @@ Transformation: {from} → {to}
 <success_criteria>
 
 - [ ] Product name captured
-- [ ] 6 Socratic questions asked and answered (threads followed, not rushed)
+- [ ] All 6 dimensions explored through adaptive conversation (not rigid Q1-Q6)
+- [ ] Freeform rule respected — plain text used when user wants to explain freely
 - [ ] Product Power Score calculated from user responses
+- [ ] Decision gate passed — user confirmed readiness to create PRODUCT.md
 - [ ] .product/ workspace scaffolded via pm-tools.cjs
 - [ ] PRODUCT.md written with full context
-- [ ] Checkpoint: user reviewed and approved
+- [ ] Review checkpoint: user approved via AskUserQuestion
 - [ ] STATE.md updated with initialization entry
 - [ ] Next-up block displayed with `/pm:icp` suggestion
 
 </success_criteria>
+</content>
+</invoke>

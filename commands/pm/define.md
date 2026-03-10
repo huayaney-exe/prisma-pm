@@ -20,6 +20,7 @@ Write PRDs that pass the Context Sufficiency Test for AI-assisted implementation
 
 <execution_context>
 @prisma-pm/workflows/define-product.md
+@prisma-pm/references/questioning.md
 @prisma-pm/skill/rules/philosophy.md
 @prisma-pm/skill/rules/context-engineering.md
 @prisma-pm/references/ui-brand.md

@@ -173,20 +173,30 @@ Write each persona to `.product/PERSONAS/{slugified-name}-PERSONA.md`.
 
 ## 7. Checkpoint: Review
 
-```
-╔══════════════════════════════════════════════════════════════╗
-║  CHECKPOINT: Review Required                                 ║
-╚══════════════════════════════════════════════════════════════╝
+Present the summary, then ask for approval:
 
+```
 Generated {count} personas:
 1. {Name} — {circumstance} (Intensity: {score}/10)
 2. {Name} — {circumstance} (Intensity: {score}/10)
 3. {Name} — {circumstance} (Intensity: {score}/10)
-
-──────────────────────────────────────────────────────────────
-→ Type "approved" or describe changes
-──────────────────────────────────────────────────────────────
 ```
+
+Use AskUserQuestion:
+- header: "Review"
+- question: "Generated {count} personas covering {dimension spread}. Approve?"
+- options:
+  - "Approved" — Looks good, proceed
+  - "Needs changes" — I'll describe what to adjust
+
+<freeform_rule>
+When the user wants to explain freely, STOP using AskUserQuestion.
+
+If a user selects "Needs changes" and their response signals freeform intent (e.g., "let me describe it", "I'll explain", "something else"), you MUST:
+1. Ask your follow-up as plain text — NOT via AskUserQuestion
+2. Wait for them to type at the normal prompt
+3. Resume AskUserQuestion only after processing their freeform response
+</freeform_rule>
 
 If changes: regenerate specific personas. Loop until approved (max 3 iterations).
 
@@ -253,3 +263,4 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state add-learning "Generated {
 - [ ] Next-up block displayed
 
 </success_criteria>
+</output>

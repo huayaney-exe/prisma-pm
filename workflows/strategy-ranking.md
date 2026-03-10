@@ -60,7 +60,7 @@ For each initiative, collect or calculate three scores:
 <step name="rice-scoring">
 ### RICE Scoring
 
-For each initiative, ask the user (or pull from discovery brief):
+For each initiative, pull data from discovery brief where available. For missing values, score interactively.
 
 | Factor | Scale | Description |
 |--------|-------|-------------|
@@ -80,19 +80,85 @@ Present scoring as a table for user input:
 | {name 2} | ? | ? | ? | ? | — |
 ```
 
-Use AskUserQuestion for each factor, or accept batch input.
+For each initiative, use AskUserQuestion to collect RICE factors:
+
+Use AskUserQuestion:
+- header: "Reach"
+- question: "How many users will {initiative name} impact per quarter?"
+- options:
+  - "< 100" — Small user base or niche feature
+  - "100-1K" — Moderate reach within core segment
+  - "1K-10K" — Broad impact across segments
+  - "10K+" — Affects most of the user base
+
+Use AskUserQuestion:
+- header: "Impact"
+- question: "How much will {initiative name} improve things for those users?"
+- options:
+  - "Minimal (0.25)" — Barely noticeable improvement
+  - "Low (0.5)" — Nice to have, minor quality of life
+  - "Medium (1)" — Meaningful improvement to workflow
+  - "Massive (3)" — Transformative, changes how they work
+
+Use AskUserQuestion:
+- header: "Confidence"
+- question: "How confident are you in these estimates for {initiative name}?"
+- options:
+  - "Low (50%)" — Gut feel, no data
+  - "Medium (80%)" — Some evidence, reasonable assumption
+  - "High (100%)" — Strong data, validated hypothesis
+
+Use AskUserQuestion:
+- header: "Effort"
+- question: "How much work is {initiative name}?"
+- options:
+  - "Small (0.5 mo)" — Quick win, days of work
+  - "Medium (1-2 mo)" — Significant but bounded
+  - "Large (3-6 mo)" — Major investment
+  - "Huge (6+ mo)" — Multi-quarter effort
+
+<freeform_rule>
+When the user wants to explain freely, STOP using AskUserQuestion.
+
+If a user selects "Other" and their response signals freeform intent, you MUST:
+1. Ask your follow-up as plain text — NOT via AskUserQuestion
+2. Wait for them to type at the normal prompt
+3. Resume AskUserQuestion only after processing their freeform response
+</freeform_rule>
 </step>
 
 <step name="power-scoring">
 ### Product Power
 
 If discovery brief exists → use the power score from the brief.
-If no brief → run quick inline scoring:
+If no brief → run quick inline scoring using AskUserQuestion for each dimension:
 
-"Rate {initiative} on three dimensions (1-10 each):
-- ΔState: How big is the transformation?
-- Intensity: How viscerally do users feel this?
-- Frequency: How often do they encounter it?"
+Use AskUserQuestion:
+- header: "ΔState"
+- question: "How big is the transformation for {initiative}?"
+- options:
+  - "1-3: Marginal" — Slight improvement, barely noticeable
+  - "4-6: Significant" — Changes daily workflow meaningfully
+  - "7-8: Major" — Eliminates entire pain points
+  - "9-10: Paradigm" — Creates a new category
+
+Use AskUserQuestion:
+- header: "Intensity"
+- question: "How viscerally do users feel this problem?"
+- options:
+  - "1-3: Mild" — Aware but not bothered
+  - "4-6: Frustrated" — Actively complaining
+  - "7-8: Desperate" — Seeking alternatives urgently
+  - "9-10: Crisis" — Will pay anything to solve it
+
+Use AskUserQuestion:
+- header: "Frequency"
+- question: "How often do they encounter this?"
+- options:
+  - "1-3: Rarely" — Yearly or quarterly
+  - "4-6: Regularly" — Monthly or weekly
+  - "7-8: Daily" — Part of daily workflow
+  - "9-10: Constant" — Always present
 
 `Power = ΔState × Intensity × Frequency`
 </step>
@@ -148,15 +214,19 @@ Highlights:
 - Top pick: {name} — {why it ranks first}
 - Low Power (<100): {names if any} — consider dropping
 - Off-strategy (align <3): {names if any} — flag for removal
-
-──────────────────────────────────────────────────────────────
-→ Select: approve / adjust scores / override ranking
-──────────────────────────────────────────────────────────────
 ```
 
-**If "adjust scores":** Re-collect specific scores and re-rank.
-**If "override ranking":** Accept manual ranking but document the override reason.
-**If "approve":** Proceed to write.
+Use AskUserQuestion:
+- header: "Ranking"
+- question: "Top pick: {name}. Does this ranking work?"
+- options:
+  - "Approved" — Commit this ranking
+  - "Adjust scores" — I want to change specific scores
+  - "Override" — I'll set the ranking manually
+
+**If "Adjust scores":** Ask which initiative and which factor to re-score using AskUserQuestion, then re-rank.
+**If "Override":** Switch to plain text — ask the user to describe their preferred ranking. Document the override reason.
+**If "Approved":** Proceed to write.
 
 ## 8. Update Backlog
 

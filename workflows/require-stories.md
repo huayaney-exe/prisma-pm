@@ -6,6 +6,15 @@ Transform a PRD into implementable user stories with full acceptance criteria. E
 Read all files referenced by the invoking command's execution_context before starting.
 </required_reading>
 
+<freeform_rule>
+When the user wants to explain freely, STOP using AskUserQuestion.
+
+If a user selects "Other" and their response signals freeform intent, you MUST:
+1. Ask your follow-up as plain text — NOT via AskUserQuestion
+2. Wait for them to type at the normal prompt
+3. Resume AskUserQuestion only after processing their freeform response
+</freeform_rule>
+
 <process>
 
 ## 1. Setup
@@ -51,17 +60,12 @@ Proposed Epics for {Feature Name}:
 3. {Epic 3 Name} — {scope description}
 ```
 
-```
-╔══════════════════════════════════════════════════════════════╗
-║  CHECKPOINT: Decision Required                               ║
-╚══════════════════════════════════════════════════════════════╝
-
-Does this epic breakdown work?
-
-──────────────────────────────────────────────────────────────
-→ Select: approve / adjust
-──────────────────────────────────────────────────────────────
-```
+Use AskUserQuestion:
+- header: "Epics"
+- question: "Does this epic breakdown work for {Feature Name}?"
+- options:
+  - "Approved" — Looks good, break into stories
+  - "Adjust" — I want to change the epic structure
 
 If adjust: refine epic structure based on feedback.
 
@@ -199,20 +203,12 @@ Check:
 
 ## 7. Checkpoint: Review
 
-```
-╔══════════════════════════════════════════════════════════════╗
-║  CHECKPOINT: Review Required                                 ║
-╚══════════════════════════════════════════════════════════════╝
-
-Requirements: {Feature Name}
-- Epics: {count}
-- Stories: {count}
-- MoSCoW: {must} Must / {should} Should / {could} Could
-
-──────────────────────────────────────────────────────────────
-→ Type "approved" or describe changes
-──────────────────────────────────────────────────────────────
-```
+Use AskUserQuestion:
+- header: "Review"
+- question: "Requirements: {story_count} stories across {epic_count} epics. Approve?"
+- options:
+  - "Approved" — Looks good, proceed
+  - "Needs changes" — I'll describe what to adjust
 
 If changes: update requirements. Loop until approved (max 3 iterations).
 

@@ -6,6 +6,15 @@ Write context-engineered PRDs that are self-sufficient for AI-assisted implement
 Read all files referenced by the invoking command's execution_context before starting.
 </required_reading>
 
+<freeform_rule>
+When the user wants to explain freely, STOP using AskUserQuestion.
+
+If a user selects "Other" and their response signals freeform intent, you MUST:
+1. Ask your follow-up as plain text — NOT via AskUserQuestion
+2. Wait for them to type at the normal prompt
+3. Resume AskUserQuestion only after processing their freeform response
+</freeform_rule>
+
 <process>
 
 ## 1. Setup
@@ -36,53 +45,106 @@ Read validation results if `.product/DISCOVERY/{slug}-VALIDATION.md` exists.
 
 **If discovery brief exists:**
 
-"Based on your discovery brief, the transformation is: {from} → {to}, with Power Score {score} ({tier}). Any changes before we define the solution?"
+Use AskUserQuestion:
+- header: "Discovery"
+- question: "Based on your brief, the transformation is: {from} → {to}, with Power Score {score} ({tier}). Want to adjust anything before we define the solution?"
+- options:
+  - "Looks good" — Proceed with the brief as-is
+  - "Adjust" — I want to tweak the transformation or scope
+  - "Start fresh" — Ignore the brief, let me re-explain
 
-Wait for confirmation or adjustments.
+Follow threads naturally with AskUserQuestion based on which option they pick. If they pick "Adjust", ask targeted follow-ups about what to change.
 
 **If NO discovery brief exists:**
 
-Ask essential questions ONE AT A TIME:
+Open with a freeform prompt as plain text (NOT AskUserQuestion):
 
-<step name="problem">
-**Q1**: "What problem does this feature solve? Describe the from-state and to-state."
-</step>
+"Tell me about the feature you want to define. What problem does it solve, who is it for, and what does the end state look like? Share as much or as little as you want — I'll ask follow-ups."
 
-<step name="audience">
-**Q2**: "Who is this for? Which ICP segment?"
-</step>
+Wait for the user to respond at the normal prompt.
 
-<step name="constraints">
-**Q3**: "What are the constraints — technical, regulatory, timeline, budget?"
-</step>
+After their response, follow threads using AskUserQuestion with contextual options derived from what they said. Keep a background checklist and weave items in naturally as the conversation flows:
 
-<step name="success">
-**Q4**: "What does success look like? How will you measure the transformation?"
-</step>
+- [ ] Problem / transformation (from-state → to-state)
+- [ ] Audience / ICP segment
+- [ ] Constraints (technical, regulatory, timeline, budget)
+- [ ] Success criteria / metrics
+- [ ] Happy path (step-by-step UX)
+- [ ] Edge cases and error states
+- [ ] Data model / entities
+- [ ] Integration points
+
+Do NOT march through these sequentially. Pick the most natural next thread based on what the user just said. Use AskUserQuestion with 2-4 concrete options (header max 12 chars, each option has label + description). Always include an "Other" option when the user might want to go off-script.
+
+Example after user describes the problem:
+
+Use AskUserQuestion:
+- header: "Next"
+- question: "Got it — {paraphrase their problem}. What should we dig into next?"
+- options:
+  - "Users" — Who exactly hits this problem?
+  - "Solution" — Walk me through the ideal experience
+  - "Constraints" — Technical or business limitations
+  - "Other" — I want to explain something else
+
+If the user selects "Other", follow the freeform_rule above.
+
+Continue until the background checklist is substantially covered (at minimum: problem, audience, happy path, and edge cases).
 
 ## 4. Solution Definition
 
-Guide the user through solution design:
+If the user has not yet described the happy path and edge cases during context gathering, guide them through solution design using AskUserQuestion:
 
-<step name="happy-path">
-**Q5**: "Describe the user experience. Walk me through the happy path step by step."
-</step>
+Use AskUserQuestion:
+- header: "UX"
+- question: "Walk me through the happy path — what does the user do step by step, and what does the system respond with?"
+- options:
+  - "Step by step" — I'll describe each interaction
+  - "High level" — Let me give a summary first
+  - "Diagram" — I'll describe a flow
 
-<step name="edge-cases">
-**Q6**: "What happens when things go wrong? Error states, edge cases, empty states."
-</step>
+After the happy path, probe edge cases:
 
-<step name="data-model">
-**Q7**: "What data entities are involved? What are their relationships?"
-</step>
+Use AskUserQuestion:
+- header: "Edge Cases"
+- question: "What happens when things go wrong? Think about error states, empty states, boundary values."
+- options:
+  - "I have ideas" — Let me list the ones I know
+  - "Help me think" — Suggest common edge cases for this type of feature
+  - "Skip for now" — Let the delivery architect handle it
 
-<step name="integrations">
-**Q8**: "Are there integration points — APIs, third-party services, existing systems?"
-</step>
+Continue with data model and integrations if not yet covered:
+
+Use AskUserQuestion:
+- header: "Data"
+- question: "What data entities are involved and how do they relate?"
+- options:
+  - "Describe" — I'll walk through the model
+  - "Infer" — Figure it out from what I've told you
+  - "Other" — I want to explain something else
+
+Use AskUserQuestion:
+- header: "Integrations"
+- question: "Any integration points — APIs, third-party services, existing systems?"
+- options:
+  - "Yes" — Let me describe them
+  - "None" — This is self-contained
+  - "Unsure" — Flag it as an open question
 
 ## 5. Delivery Architect Analysis
 
-Spawn delivery-architect agent for technical decomposition:
+**Decision gate before spawning:**
+
+Use AskUserQuestion:
+- header: "Ready?"
+- question: "I have enough context for technical decomposition. Proceed?"
+- options:
+  - "Analyze it" — Spawn delivery-architect agent
+  - "Keep exploring" — I want to add more context
+
+If "Keep exploring": return to context gathering / solution definition, ask what they want to add, then re-present this gate.
+
+If "Analyze it": spawn the delivery-architect agent.
 
 ```
 ◆ Spawning delivery-architect agent...
@@ -96,10 +158,10 @@ Agent(
 <feature_context>
 Feature: {feature name}
 Transformation: {from} → {to}
-Happy Path: {steps from Q5}
-Edge Cases: {from Q6}
-Data Entities: {from Q7}
-Integrations: {from Q8}
+Happy Path: {steps from conversation}
+Edge Cases: {from conversation}
+Data Entities: {from conversation}
+Integrations: {from conversation}
 </feature_context>
 
 <product_context>
@@ -260,22 +322,14 @@ Set `context_sufficient: false` and note gaps in Open Questions.
 
 ## 8. Checkpoint: Review
 
-```
-╔══════════════════════════════════════════════════════════════╗
-║  CHECKPOINT: Review Required                                 ║
-╚══════════════════════════════════════════════════════════════╝
+Use AskUserQuestion:
+- header: "Review"
+- question: "PRD: {Feature Name} ({format}). Context Sufficient: {yes/no}. Approve?"
+- options:
+  - "Approved" — Looks good, proceed
+  - "Needs changes" — I'll describe what to adjust
 
-PRD: {Feature Name} ({format} format)
-Context Sufficient: {yes/no}
-Acceptance Criteria: {count}
-Edge Cases: {count}
-
-──────────────────────────────────────────────────────────────
-→ Type "approved" or describe changes
-──────────────────────────────────────────────────────────────
-```
-
-If changes: update PRD. Loop until approved (max 3 iterations).
+If "Needs changes": update PRD based on feedback. Loop until approved (max 3 iterations).
 
 ## 9. Update State
 
@@ -324,13 +378,14 @@ Acceptance Criteria: {count}
 <success_criteria>
 
 - [ ] Discovery brief loaded if available
-- [ ] Context gathered (from brief or through questioning)
+- [ ] Context gathered (from brief or through thinking-partner conversation)
 - [ ] Solution defined with happy path and edge cases
+- [ ] Decision gate passed before spawning delivery-architect
 - [ ] Delivery-architect agent spawned and returned technical decomposition
 - [ ] PRD written in requested format with all sections
 - [ ] Context Sufficiency validation loop completed (max 3 iterations)
 - [ ] Acceptance criteria in Given/When/Then format
-- [ ] Checkpoint: user reviewed and approved
+- [ ] Checkpoint: user reviewed and approved via AskUserQuestion
 - [ ] Initiative stage advanced to "defining"
 - [ ] Next-up block displayed with `/pm:require` suggestion
 

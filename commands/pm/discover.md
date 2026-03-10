@@ -21,6 +21,7 @@ Explore a problem space through Socratic questioning and multi-agent analysis. C
 
 <execution_context>
 @prisma-pm/workflows/discover-problem.md
+@prisma-pm/references/questioning.md
 @prisma-pm/skill/rules/philosophy.md
 @prisma-pm/skill/rules/anti-patterns.md
 @prisma-pm/references/ui-brand.md

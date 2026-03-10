@@ -28,55 +28,66 @@ Parse JSON. This command works with or without a product workspace.
 
 ## 3. Collect Dimensions
 
-If a problem description is provided in $ARGUMENTS, use it as context. Otherwise ask:
+If a problem description is provided in $ARGUMENTS, use it as context. Otherwise ask as plain text:
 
 "What problem or opportunity do you want to score?"
 
-Then score each dimension ONE AT A TIME:
+Wait for their response before continuing.
+
+<freeform_rule>
+When the user wants to explain freely, STOP using AskUserQuestion.
+
+If a user selects "Other" and their response signals freeform intent (e.g., "let me describe it", "I'll explain"), you MUST:
+1. Ask your follow-up as plain text — NOT via AskUserQuestion
+2. Wait for them to type at the normal prompt
+3. Resume AskUserQuestion only after processing their freeform response
+</freeform_rule>
+
+Then score each dimension using AskUserQuestion:
 
 <step name="delta-state">
 **Dimension 1: ΔState (1-10)**
-"How big is the gap between the current state and the ideal state?"
 
-| Score | Meaning | Example |
-|-------|---------|---------|
-| 1-2 | Marginal improvement | Slightly faster loading |
-| 3-4 | Noticeable improvement | Saves 30 min/week |
-| 5-6 | Significant transformation | Changes daily workflow |
-| 7-8 | Major life/work change | Eliminates a job function |
-| 9-10 | Fundamental paradigm shift | Creates new category |
+Use AskUserQuestion:
+- header: "ΔState"
+- question: "How big is the gap between the current state and the ideal state?"
+- options:
+  - "1-3: Marginal" — Slight improvement, saves minutes not hours
+  - "4-6: Significant" — Changes daily workflow, saves meaningful time
+  - "7-8: Major" — Eliminates entire job functions or pain points
+  - "9-10: Paradigm" — Creates a new category entirely
 
-"Your rating and why?"
+After selection, ask as plain text: "What's your specific rating and why?"
 </step>
 
 <step name="intensity">
 **Dimension 2: Emotional Intensity (1-10)**
-"How viscerally do people feel this problem?"
 
-| Score | Meaning | Signal |
-|-------|---------|--------|
-| 1-2 | Barely noticed | No complaints |
-| 3-4 | Mildly annoyed | Occasional mentions |
-| 5-6 | Frustrated | Active complaints |
-| 7-8 | Angry/desperate | Seeking alternatives |
-| 9-10 | In crisis | Will pay anything |
+Use AskUserQuestion:
+- header: "Intensity"
+- question: "How viscerally do people feel this problem?"
+- options:
+  - "1-3: Mild" — Aware it's a problem but not bothered
+  - "4-6: Frustrated" — Actively complaining, motivated to solve
+  - "7-8: Desperate" — Seeking alternatives urgently, will pay premium
+  - "9-10: Crisis" — Identity-level pain, will pay anything
 
-"Your rating and why?"
+After selection, ask as plain text: "What's your specific rating and why?"
 </step>
 
 <step name="frequency">
 **Dimension 3: Problem Frequency (1-10)**
-"How often do they encounter this problem?"
 
-| Score | Meaning | Cadence |
-|-------|---------|---------|
-| 1-2 | Rarely | Yearly |
-| 3-4 | Occasionally | Monthly |
-| 5-6 | Regularly | Weekly |
-| 7-8 | Frequently | Daily |
-| 9-10 | Constantly | Always present |
+Use AskUserQuestion:
+- header: "Frequency"
+- question: "How often do they encounter this problem?"
+- options:
+  - "1-3: Rarely" — Yearly or quarterly
+  - "4-6: Regularly" — Monthly or weekly
+  - "7-8: Daily" — Part of daily workflow
+  - "9-10: Constant" — Always present, ambient pain
 
-"Your rating and why?"
+After selection, ask as plain text: "What's your specific rating and why?"
 </step>
 
 ## 4. Calculate and Display
