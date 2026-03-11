@@ -2,9 +2,9 @@
 
 # PRODUCT BUILDER
 
-**AI-native product management for Claude Code.**
+**Context-resilient system for transformation-driven product building with Claude Code.**
 
-**Solves the PM-to-builder gap — the thinking layer that turns vague ideas into products people pay for.**
+**Turns product managers into product engineers — from vague ideas to build-ready specs that survive context degradation.**
 
 [![npm version](https://img.shields.io/npm/v/product-builder?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/product-builder)
 [![npm downloads](https://img.shields.io/npm/dm/product-builder?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/product-builder)
@@ -26,7 +26,7 @@ npx product-builder@latest
 
 *"Products are transformation engines — people pay for the delta between states, not for features."*
 
-*"AI compresses the PM cycle from weeks to hours. 10x more discovery, 10x more validation, 10x faster iteration."*
+*"The spec that degrades is the spec that fails. Every artifact must carry enough signal to build from — across sessions, agents, and time."*
 
 *"The PM that ships is the PM that thinks clearly. Everything else is ceremony."*
 
@@ -42,9 +42,9 @@ npx product-builder@latest
 
 I'm a product builder from Latin America. I don't believe in product management theater — the endless docs nobody reads, the ceremonies that slow everything down, the PRDs that get outdated before engineering starts.
 
-The world is shifting. Product engineers are replacing product managers. The PMs who survive are the ones who think clearly, frame problems precisely, and ship fast. But most PMs don't have the tools for this new era. They use ChatGPT with templates and call it "AI-native."
+The world is shifting. Product managers are becoming product engineers. The ones who survive are the ones who think clearly, frame problems as transformations, and ship specs that don't degrade when they hand them off. But most PMs don't have the tools for this new era. They use ChatGPT with templates and call it "AI-native."
 
-So I built Product Builder. It's a cognitive copilot — not a doc generator. Behind the scenes: Socratic questioning loops, multi-agent analysis, anti-pattern detection, framework application. What you see: a few commands that make you think better about your product.
+So I built Product Builder. It's a context-resilient system for transformation-driven product engineering — not a doc generator. Behind the scenes: Socratic questioning loops, multi-agent analysis, anti-pattern detection, framework application. What you see: a few commands that make you engineer better products.
 
 The system doesn't just produce artifacts. It teaches you to ask the right questions. It catches you when you're solving solutions instead of problems. It forces you to score opportunities before committing resources. It kills features that don't clear the bar.
 
@@ -56,7 +56,7 @@ That's what this is. No management roleplay. Just an incredibly effective system
 
 ## Who This Is For
 
-People who want to think clearly about what to build and why — without pretending they're running a 200-person product org.
+Product managers becoming product builders. People who want to engineer transformations, not manage feature lists — and need specs that don't degrade when they hand them off.
 
 ---
 
@@ -319,6 +319,6 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-**Claude Code is powerful. Product Builder makes you think clearly.**
+**Claude Code is powerful. Product Builder makes you engineer transformations.**
 
 </div>

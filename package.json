@@ -1,7 +1,7 @@
 {
   "name": "product-builder",
-  "version": "0.2.1",
-  "description": "AI-native product management skills for Claude Code. Context engineering for PMs who build.",
+  "version": "0.2.3",
+  "description": "Context-resilient system for transformation-driven product building with Claude Code.",
   "bin": {
     "product-builder": "./bin/install.js"
   },
@@ -23,9 +23,10 @@
   },
   "keywords": [
     "claude-code",
-    "product-management",
-    "ai-native",
-    "skills",
+    "product-building",
+    "product-engineering",
+    "transformation-driven",
+    "context-resilient",
     "pm",
     "prd",
     "jtbd",
@@ -36,6 +37,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/prisma-pm/prisma-pm"
+    "url": "https://github.com/huayaney-exe/prisma-pm"
   }
 }

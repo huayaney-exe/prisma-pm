@@ -19,12 +19,9 @@ const c = {
   green: '\x1b[32m',
   yellow: '\x1b[33m',
   red: '\x1b[31m',
-  magenta: '\x1b[35m',
-  white: '\x1b[37m',
 };
 
 function log(msg) { console.log(msg); }
-function logCyan(msg) { log(`${c.cyan}${msg}${c.reset}`); }
 function logGreen(msg) { log(`${c.green}${msg}${c.reset}`); }
 function logYellow(msg) { log(`${c.yellow}${msg}${c.reset}`); }
 function logRed(msg) { log(`${c.red}${msg}${c.reset}`); }
@@ -43,7 +40,7 @@ const flags = {
 // ── Help ──────────────────────────────────────────────
 if (flags.help) {
   log('');
-  logBold('  Prisma PM — AI-Native Product Management for Claude Code');
+  logBold('  Product Builder — Transformation-Driven Product Engineering');
   log('');
   log('  Usage:');
   log('    npx prisma-pm@latest              Install (interactive)');
@@ -182,6 +179,124 @@ function getInstallMap(targetDir) {
   ];
 }
 
+// ── Hooks & StatusLine ───────────────────────────────
+function registerHooks() {
+  const globalDir = getGlobalDir();
+  const settingsPath = path.join(globalDir, 'settings.json');
+  const hookDir = path.join(globalDir, 'hooks');
+  const hookPath = path.join(hookDir, 'pb-check-update.js');
+  const hookCommand = `node "${hookPath}"`;
+
+  // Copy hook file
+  fs.mkdirSync(hookDir, { recursive: true });
+  const src = path.join(PACKAGE_ROOT, 'bin', 'pb-check-update.js');
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, hookPath);
+  }
+
+  // Read existing settings
+  if (!fs.existsSync(settingsPath)) return;
+  let settings;
+  try {
+    settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+  } catch (e) { return; }
+
+  // Append to SessionStart hooks (don't duplicate)
+  if (!settings.hooks) settings.hooks = {};
+  if (!settings.hooks.SessionStart) settings.hooks.SessionStart = [];
+
+  const alreadyRegistered = settings.hooks.SessionStart.some(entry =>
+    entry.hooks && entry.hooks.some(h => h.command && h.command.includes('pb-check-update'))
+  );
+
+  if (!alreadyRegistered) {
+    settings.hooks.SessionStart.push({
+      hooks: [{
+        type: 'command',
+        command: hookCommand,
+      }],
+    });
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+  }
+}
+
+function patchStatusLine() {
+  const statusLinePath = path.join(getGlobalDir(), 'hooks', 'gsd-statusline.js');
+  if (!fs.existsSync(statusLinePath)) return;
+
+  let content = fs.readFileSync(statusLinePath, 'utf-8');
+
+  // Already patched?
+  if (content.includes('pb-update-check.json')) return;
+
+  // Insert PB update check after the GSD update check block
+  const marker = '    // Output';
+  if (!content.includes(marker)) return;
+
+  const pbBlock = `    // Product Builder update available?
+    let pbUpdate = '';
+    const pbCacheFile = path.join(homeDir, '.claude', 'cache', 'pb-update-check.json');
+    if (fs.existsSync(pbCacheFile)) {
+      try {
+        const pbCache = JSON.parse(fs.readFileSync(pbCacheFile, 'utf8'));
+        if (pbCache.update_available) {
+          pbUpdate = '\\x1b[33m⬆ /pm:update\\x1b[0m │ ';
+        }
+      } catch (e) {}
+    }
+
+    // Output`;
+
+  content = content.replace(marker, pbBlock);
+
+  // Prepend pbUpdate to output lines
+  content = content.replace(
+    /process\.stdout\.write\(`\$\{gsdUpdate\}/g,
+    'process.stdout.write(`${gsdUpdate}${pbUpdate}'
+  );
+
+  fs.writeFileSync(statusLinePath, content);
+}
+
+function removeHooks() {
+  const globalDir = getGlobalDir();
+
+  // Remove hook file
+  const hookPath = path.join(globalDir, 'hooks', 'pb-check-update.js');
+  if (fs.existsSync(hookPath)) fs.unlinkSync(hookPath);
+
+  // Remove cache
+  const cachePath = path.join(globalDir, 'cache', 'pb-update-check.json');
+  if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath);
+
+  // Remove SessionStart entry from settings.json
+  const settingsPath = path.join(globalDir, 'settings.json');
+  if (fs.existsSync(settingsPath)) {
+    try {
+      const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+      if (settings.hooks && settings.hooks.SessionStart) {
+        settings.hooks.SessionStart = settings.hooks.SessionStart.filter(entry =>
+          !(entry.hooks && entry.hooks.some(h => h.command && h.command.includes('pb-check-update')))
+        );
+        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+      }
+    } catch (e) {}
+  }
+
+  // Remove PB patch from statusline
+  const statusLinePath = path.join(globalDir, 'hooks', 'gsd-statusline.js');
+  if (fs.existsSync(statusLinePath)) {
+    let content = fs.readFileSync(statusLinePath, 'utf-8');
+    if (content.includes('pb-update-check.json')) {
+      // Remove PB block
+      content = content.replace(/    \/\/ Product Builder update available\?[\s\S]*?    \/\/ Output/, '    // Output');
+      // Remove pbUpdate from output lines
+      content = content.replace(/\$\{pbUpdate\}/g, '');
+      fs.writeFileSync(statusLinePath, content);
+    }
+  }
+}
+
 // ── Uninstall ─────────────────────────────────────────
 function uninstall(targetDir) {
   const manifestPath = path.join(targetDir, MANIFEST_NAME);
@@ -191,24 +306,24 @@ function uninstall(targetDir) {
   }
 
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-  let removed = 0;
 
   // Remove commands
   const pmCommandsDir = path.join(targetDir, 'commands', 'pm');
   if (fs.existsSync(pmCommandsDir)) {
     fs.rmSync(pmCommandsDir, { recursive: true });
-    removed++;
   }
 
   // Remove skill directory
   const skillDir = path.join(targetDir, 'skills', 'prisma-pm');
   if (fs.existsSync(skillDir)) {
     fs.rmSync(skillDir, { recursive: true });
-    removed++;
   }
 
   // Remove manifest
   fs.unlinkSync(manifestPath);
+
+  // Remove hooks, cache, settings entries, statusline patch
+  removeHooks();
 
   log('');
   logGreen(`  ✓ Prisma PM v${manifest.version} uninstalled`);
@@ -263,23 +378,29 @@ function colorizeRow(row, width, darken) {
 
 // ── Brand Logo ────────────────────────────────────────
 function printLogo() {
-  const rows = [
+  const W = rgb(255, 255, 255); // white for star
+  const prisma = [
     '  ██████  ██████  ██ ███████ ██   ██  █████ ',
     '  ██   ██ ██   ██ ██ ██      ███ ███ ██   ██',
     '  ██████  ██████  ██ ███████ ██ █ ██ ███████',
     '  ██      ██  ██  ██      ██ ██   ██ ██   ██',
     '  ██      ██   ██ ██ ███████ ██   ██ ██   ██',
   ];
-  const shadow = '  ▀▀      ▀▀   ▀▀ ▀▀ ▀▀▀▀▀▀▀ ▀▀   ▀▀ ▀▀   ▀▀';
-  const width = rows[0].length;
+  const prismaShadow = '  ▀▀      ▀▀   ▀▀ ▀▀ ▀▀▀▀▀▀▀ ▀▀   ▀▀ ▀▀   ▀▀';
+  const maxPrisma = Math.max(...prisma.map(r => r.length));
 
   log('');
-  for (const row of rows) {
-    log(colorizeRow(row, width, 1));
+  for (let i = 0; i < prisma.length; i++) {
+    const gradientPart = colorizeRow(prisma[i].padEnd(maxPrisma), maxPrisma, 1);
+    if (i === 2) {
+      log(gradientPart + `  ${W}✦${c.reset}`);
+    } else {
+      log(gradientPart);
+    }
   }
-  log(colorizeRow(shadow, width, 0.4));
+  log(colorizeRow(prismaShadow.padEnd(maxPrisma), maxPrisma, 0.4));
   log('');
-  log(`  ${c.bold}Product Builder${c.reset} ${c.dim}v${VERSION}${c.reset}`);
+  log(`  ${W}✦${c.reset} ${c.bold}Product Builder${c.reset} ${c.dim}v${VERSION}${c.reset}`);
   log(`  ${c.dim}Stop managing. Start building.${c.reset}`);
 }
 
@@ -348,9 +469,14 @@ async function main() {
     )
   );
 
+  // Register update check hook + patch statusline
+  registerHooks();
+  patchStatusLine();
+  log(`  ${c.green}✓${c.reset} Registered update check hook`);
+
   // Success banner
   log('');
-  logGreen(`  Done!`);
+  logGreen(`  ✦ Done!`);
   log(`  ${c.dim}${stats.created} created, ${stats.updated} updated, ${stats.skipped} unchanged${c.reset}`);
 
   // Commands reference
@@ -371,7 +497,7 @@ async function main() {
 
   // Getting started
   log('');
-  log(`  Run ${c.cyan}/pm:help${c.reset} to get started.`);
+  log(`  Run ${c.cyan}/pm:help${c.reset} to get started. ✦`);
   log('');
 }
 

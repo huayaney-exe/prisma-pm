@@ -237,6 +237,7 @@ function scaffold(productName) {
       'discovering',
       'validating',
       'defining',
+      'designing',
       'requiring',
       'planning',
       'building',
@@ -308,6 +309,19 @@ function init(command, slug, includes) {
     result.prd_content = safeReadFile(path.join(productDir, 'DEFINITIONS', `${slug}-PRD.md`));
     result.requirements_content = safeReadFile(path.join(productDir, 'DEFINITIONS', `${slug}-REQUIREMENTS.md`));
   }
+
+  // Check for update cache
+  const cacheFile = path.join(os.homedir(), '.claude', 'cache', 'pb-update-check.json');
+  try {
+    if (fs.existsSync(cacheFile)) {
+      const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf-8'));
+      if (cache.update_available) {
+        result.update_available = true;
+        result.update_latest = cache.latest;
+        result.update_installed = cache.installed;
+      }
+    }
+  } catch (e) {}
 
   outputJSON(result);
 }

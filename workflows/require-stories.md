@@ -38,6 +38,8 @@ If multiple PRDs exist, use AskUserQuestion:
 
 Read the selected PRD fully.
 
+Also read design spec if `.product/DEFINITIONS/{slug}-DESIGN.md` exists. If design spec exists, stories must reference design decisions — messaging copy, CTA placement, flow specifications, and design system foundations should flow into story acceptance criteria and implementation context.
+
 ## 2. Display Banner
 
 ```

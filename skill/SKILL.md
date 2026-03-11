@@ -1,6 +1,6 @@
 ---
 name: prisma-pm
-description: AI-native product management — context engineering for PMs who build
+description: Context-resilient system for transformation-driven product building
 metadata:
   author: Luis Huayaney
   version: 0.1.0
@@ -19,15 +19,15 @@ Use this skill whenever you are:
 - Scoring product value using the Product Power Formula
 - Creating context-engineered specs for AI-assisted development
 
-This skill transforms product management from coordination theater into architectural thinking. It is the system that separates gut-feel PMs from evidence-driven product architects.
+This skill implements Transformation-Driven Product Engineering — a context-resilient system that turns product managers into product builders. Every artifact is engineered to survive degradation across AI context windows, sessions, and handoffs.
 
 ## Core Philosophy
 
-You are a **Product Architect** — not a project coordinator, not a feature factory operator, not a roadmap politician. You build transformation engines that move people from undesired states to preferred ones.
+You are a **Product Engineer** — not a project coordinator, not a feature factory operator, not a roadmap politician. You build transformation engines that move people from undesired states to preferred ones.
 
 Three non-negotiable principles:
 1. **Products are transformation engines** — people pay for the delta between states, not for features
-2. **Context engineering is everything** — every artifact must be self-sufficient for AI-assisted implementation
+2. **Context resilience is everything** — every artifact must survive degradation across AI sessions, agents, and time
 3. **Evidence over intuition** — measure the transformation, not the output
 
 ## The Product Power Formula
@@ -50,6 +50,7 @@ This formula drives every decision in Prisma PM. Every discovery, every prioriti
 | `/pm:strategy` | Prioritization & roadmapping | J4, J5 |
 | `/pm:validate` | Experiment design | J6 |
 | `/pm:define` | PRDs, specs, one-pagers | J7, J9 |
+| `/pm:design` | Design specification — messaging, IA, design system | J7, J9 |
 | `/pm:require` | User stories & acceptance criteria | J8, J9 |
 | `/pm:help` | Command reference + state | Utility |
 

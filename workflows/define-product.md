@@ -352,15 +352,16 @@ Acceptance Criteria: {count}
 
 ## ▶ Next Up
 
-**Write Requirements** — break this PRD into implementable user stories
+**Design the Experience** — specify messaging, flows, and design system foundations
 
-`/pm:require --from {slug}`
+`/pm:design --from {slug}`
 
 <sub>`/clear` first → fresh context window</sub>
 
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
+- `/pm:require` — skip design, go straight to user stories
 - `/pm:strategy` — rank this initiative against others
 - `/pm:help` — see all commands
 

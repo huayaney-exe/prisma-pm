@@ -78,4 +78,12 @@ Print confirmation:
 ✓ Prisma PM updated to v{new_version}
   Restart Claude Code to load updated commands.
 ```
+
+## Step 6: Clear Update Cache
+
+Remove the update cache so the statusline alert disappears:
+
+```bash
+rm -f ~/.claude/cache/pb-update-check.json
+```
 </process>
