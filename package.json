@@ -1,6 +1,6 @@
 {
   "name": "product-builder",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Context-resilient system for transformation-driven product building with Claude Code.",
   "bin": {
     "product-builder": "./bin/install.js"
