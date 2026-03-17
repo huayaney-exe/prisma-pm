@@ -224,7 +224,7 @@ Hypothesis → Experiment design → Kill criteria. Forces you to define what ev
 ┌────────────────────────────────────────────────────────────┐
 │  COMMANDS (thin routers — ~49 lines avg)                   │
 │                                                            │
-│  /pm:discover  /pm:define  /pm:power  /pm:strategy  ...   │
+│  /pm:discover  /pm:define  /pm:design  /pm:power  ...     │
 │  Parse args, load context, invoke workflow                 │
 └──────────────────────────┬─────────────────────────────────┘
                            │
@@ -266,11 +266,12 @@ Each command reads the output of previous commands — context chains automatica
 | `/pm:strategy` | RICE + Product Power → Force-ranked backlog, no ties |
 | `/pm:validate "hypothesis"` | Experiment design with kill criteria |
 
-### Definition (run per feature)
+### Definition & Design (run per feature)
 
 | Command | What It Does |
 |---------|--------------|
 | `/pm:define "feature"` | Context-engineered PRD (lean, full, or one-pager) |
+| `/pm:design` | Design specification — messaging, IA, flows, design system |
 | `/pm:require` | PRD → User stories + acceptance criteria for engineering |
 
 ### Utility

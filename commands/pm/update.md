@@ -31,10 +31,8 @@ Determine which installation exists and its current version.
 ## Step 2: Check Latest Version
 
 ```bash
-LATEST=$(npm view prisma-pm version 2>/dev/null || echo "unknown")
+LATEST=$(npm view product-builder version 2>/dev/null || echo "unknown")
 ```
-
-If the npm package isn't published yet, inform the user and suggest using the git source.
 
 ## Step 3: Compare Versions
 
@@ -61,10 +59,10 @@ Ask the user to confirm, then run:
 
 ```bash
 # For global installation
-npx prisma-pm@latest --global --force
+npx product-builder@latest --global --force
 
 # For local installation
-npx prisma-pm@latest --local --force
+npx product-builder@latest --local --force
 ```
 
 ## Step 5: Verify

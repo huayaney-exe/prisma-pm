@@ -35,8 +35,9 @@ DISCOVERY & STRATEGY (run per initiative)
   /pm:strategy           RICE + Product Power ranking → Force-ranked backlog
   /pm:validate "hyp"     Hypothesis → Experiment design → Kill criteria
 
-DEFINITION (run per feature)
+DEFINITION & DESIGN (run per feature)
   /pm:define "feature"   Problem → PRD with context-engineering blocks
+  /pm:design             Design spec — messaging, IA, flows, design system foundations
   /pm:require            PRD → User stories + acceptance criteria → Engineering handoff
 
 UTILITY

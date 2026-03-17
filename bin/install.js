@@ -43,11 +43,11 @@ if (flags.help) {
   logBold('  Product Builder — Transformation-Driven Product Engineering');
   log('');
   log('  Usage:');
-  log('    npx prisma-pm@latest              Install (interactive)');
-  log('    npx prisma-pm@latest --global     Install to ~/.claude/');
-  log('    npx prisma-pm@latest --local      Install to ./.claude/');
-  log('    npx prisma-pm@latest --uninstall  Remove installed files');
-  log('    npx prisma-pm@latest --force      Overwrite without prompting');
+  log('    npx product-builder@latest              Install (interactive)');
+  log('    npx product-builder@latest --global     Install to ~/.claude/');
+  log('    npx product-builder@latest --local      Install to ./.claude/');
+  log('    npx product-builder@latest --uninstall  Remove installed files');
+  log('    npx product-builder@latest --force      Overwrite without prompting');
   log('');
   process.exit(0);
 }
