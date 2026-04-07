@@ -2,7 +2,7 @@
 
 # PRODUCT BUILDER
 
-**Context-resilient system for transformation-driven product building with Claude Code.**
+**Context-resilient system for transformation-driven product building.**
 
 **Turns product managers into product engineers — from vague ideas to build-ready specs that survive context degradation.**
 
@@ -16,7 +16,7 @@
 npx product-builder@latest
 ```
 
-**Works on Mac, Windows, and Linux. Requires [Claude Code](https://claude.ai/code).**
+**Works with Claude Code · Gemini CLI · Codex · GitHub Copilot · Cursor · OpenCode**
 
 <br>
 
@@ -95,7 +95,7 @@ The installer auto-detects your AI CLI and prompts you to choose scope:
 - **Global** — Available in all projects (recommended)
 - **Local** — Current project only
 
-Supports: **Claude Code**, **Gemini CLI**, **Codex**, **OpenCode**. Use `--claude`, `--gemini`, `--codex`, or `--opencode` to target a specific runtime.
+Supports **6 runtimes**. Use `--claude`, `--gemini`, `--codex`, `--copilot`, `--cursor`, or `--opencode` to target a specific one, or `--all` to install everywhere.
 
 Verify with:
 ```
@@ -108,7 +108,9 @@ Verify with:
 ```bash
 npx product-builder@latest --global    # Install globally
 npx product-builder@latest --local     # Install to current project
-npx product-builder@latest --gemini    # Target Gemini CLI specifically
+npx product-builder@latest --gemini    # Target Gemini CLI
+npx product-builder@latest --cursor    # Target Cursor
+npx product-builder@latest --all       # Install to all detected CLIs
 npx product-builder@latest --force     # Overwrite without prompting
 npx product-builder@latest --uninstall # Remove installed files
 ```
@@ -124,7 +126,7 @@ Product Builder evolves fast. Update periodically:
 npx product-builder@latest
 ```
 
-Or from inside Claude Code:
+Or from inside any supported CLI:
 ```
 /pm:update
 ```
@@ -300,8 +302,10 @@ Product Builder applies these frameworks automatically during workflows — you 
 
 ## Requirements
 
-- [Claude Code](https://claude.ai/code) installed
+- One of: [Claude Code](https://claude.ai/code), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Codex](https://github.com/openai/codex), [GitHub Copilot](https://github.com/features/copilot), [Cursor](https://cursor.com), or [OpenCode](https://github.com/opencode-ai/opencode)
 - Node.js >= 18
+
+The installer auto-detects which CLIs are installed and adapts per runtime — TOML commands for Gemini, tool name mapping for Cursor/Copilot, path replacement for all.
 
 ---
 
@@ -323,6 +327,6 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-**Claude Code is powerful. Product Builder makes you engineer transformations.**
+**Your AI CLI is powerful. Product Builder makes you engineer transformations.**
 
 </div>
