@@ -298,12 +298,21 @@ function copyRecursive(src, dest, manifest, stats) {
 }
 
 // ── Installation Mapping ──────────────────────────────
-function getInstallMap(targetDir) {
+function getInstallMap(targetDir, runtimeId) {
+  // Claude Code: commands go to commands/pm/ (native slash command discovery)
+  // Other runtimes: commands go inside the skill dir (discovered via SKILL.md)
+  const commandsDest = runtimeId === 'claude'
+    ? path.join(targetDir, 'commands')
+    : path.join(targetDir, 'skills', 'prisma-pm', 'commands');
+  const commandsLabel = runtimeId === 'claude'
+    ? 'commands/pm/'
+    : 'skills/prisma-pm/commands/pm/';
+
   return [
     {
       src: path.join(PACKAGE_ROOT, 'commands'),
-      dest: path.join(targetDir, 'commands'),
-      label: 'commands/pm/',
+      dest: commandsDest,
+      label: commandsLabel,
     },
     {
       src: path.join(PACKAGE_ROOT, 'skill'),
@@ -473,10 +482,14 @@ function uninstall(targetDir, runtime) {
 
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
 
-  // Remove commands
+  // Remove commands (Claude: commands/pm/, others: inside skill dir)
   const pmCommandsDir = path.join(targetDir, 'commands', 'pm');
   if (fs.existsSync(pmCommandsDir)) {
     fs.rmSync(pmCommandsDir, { recursive: true });
+  }
+  const skillCommandsDir = path.join(targetDir, 'skills', 'prisma-pm', 'commands');
+  if (fs.existsSync(skillCommandsDir)) {
+    fs.rmSync(skillCommandsDir, { recursive: true });
   }
 
   // Remove skill directory
@@ -596,7 +609,7 @@ async function main() {
 
   const allManifestEntries = [];
   const stats = { created: 0, updated: 0, skipped: 0 };
-  const installMap = getInstallMap(targetDir);
+  const installMap = getInstallMap(targetDir, runtime.id);
 
   log('');
 
