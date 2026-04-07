@@ -250,6 +250,19 @@ Hypothesis → Experiment design → Kill criteria. Forces you to define what ev
 
 Each command reads the output of previous commands — context chains automatically. State is tracked in `.product/STATE.md`. No manual wiring needed.
 
+### Runtime Adaptation
+
+Every workflow works on every supported runtime — no degraded experience:
+
+| Capability | Claude Code / Cursor / OpenCode | Gemini CLI / Codex / Copilot |
+|------------|-------------------------------|------------------------------|
+| Agent analysis | Parallel subprocess spawning | Sequential inline execution |
+| Commands | Markdown (YAML frontmatter) | TOML (auto-converted) |
+| Tool names | Native (`Read`, `Bash`, `Edit`) | Mapped per runtime (`read_file`, `Shell`, etc.) |
+| File paths | `~/.claude/skills/prisma-pm/...` | Rewritten to `~/.gemini/...`, `~/.cursor/...`, etc. |
+
+Workflows include `<runtime_compatibility>` blocks with conditional execution paths. On runtimes without agent spawning, the system reads the agent file and executes its full process inline — same analysis, same output quality, just in-context instead of subprocess.
+
 ---
 
 ## Commands
