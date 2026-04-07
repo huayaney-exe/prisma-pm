@@ -1,6 +1,6 @@
 {
   "name": "product-builder",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Context-resilient system for transformation-driven product building. Works with Claude Code, Gemini CLI, Codex, and OpenCode.",
   "bin": {
     "product-builder": "./bin/install.js"
