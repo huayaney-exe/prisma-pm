@@ -1,7 +1,7 @@
 {
   "name": "product-builder",
-  "version": "0.3.2",
-  "description": "Context-resilient system for transformation-driven product building. Works with Claude Code, Gemini CLI, Codex, and OpenCode.",
+  "version": "0.4.0",
+  "description": "Context-resilient system for transformation-driven product building. Works with Claude Code, Gemini CLI, Codex, Copilot, Cursor, and OpenCode.",
   "bin": {
     "product-builder": "./bin/install.js"
   },
@@ -36,6 +36,8 @@
     "multi-runtime",
     "gemini-cli",
     "codex",
+    "copilot",
+    "cursor",
     "opencode"
   ],
   "author": "Luis Huayaney",

@@ -27,50 +27,119 @@ function logYellow(msg) { log(`${c.yellow}${msg}${c.reset}`); }
 function logRed(msg) { log(`${c.red}${msg}${c.reset}`); }
 function logBold(msg) { log(`${c.bold}${msg}${c.reset}`); }
 
-// ── Supported Runtimes ───────────────────────────────
+// ── Supported Runtimes (matching GSD) ────────────────
 const RUNTIMES = {
   claude: {
     name: 'Claude Code',
+    dirName: '.claude',
     dirs: ['.claude'],
     env: ['CLAUDE_CONFIG_DIR'],
     supportsHooks: true,
     supportsStatusLine: true,
+    commandFormat: 'md',
   },
   gemini: {
     name: 'Gemini CLI',
+    dirName: '.gemini',
     dirs: ['.gemini'],
     env: ['GEMINI_CONFIG_DIR'],
     supportsHooks: false,
     supportsStatusLine: false,
+    commandFormat: 'toml',
   },
   codex: {
     name: 'Codex',
+    dirName: '.codex',
     dirs: ['.codex'],
     env: ['CODEX_HOME'],
     supportsHooks: false,
     supportsStatusLine: false,
+    commandFormat: 'md',
+  },
+  copilot: {
+    name: 'GitHub Copilot',
+    dirName: '.copilot',
+    dirs: ['.copilot'],
+    env: ['COPILOT_CONFIG_DIR'],
+    supportsHooks: false,
+    supportsStatusLine: false,
+    commandFormat: 'md',
+  },
+  cursor: {
+    name: 'Cursor',
+    dirName: '.cursor',
+    dirs: ['.cursor'],
+    env: ['CURSOR_CONFIG_DIR'],
+    supportsHooks: false,
+    supportsStatusLine: false,
+    commandFormat: 'md',
   },
   opencode: {
     name: 'OpenCode',
+    dirName: '.opencode',
     dirs: ['.config/opencode', '.opencode'],
     env: ['OPENCODE_CONFIG_DIR', 'OPENCODE_CONFIG'],
     supportsHooks: false,
     supportsStatusLine: false,
+    commandFormat: 'md',
+  },
+};
+
+// ── Tool Name Mapping Per Runtime (matching GSD) ─────
+const TOOL_MAPS = {
+  gemini: {
+    Read: 'read_file',
+    Write: 'write_file',
+    Edit: 'replace',
+    Bash: 'run_shell_command',
+    Glob: 'glob',
+    Grep: 'search_file_content',
+    WebSearch: 'google_web_search',
+    WebFetch: 'web_fetch',
+    AskUserQuestion: 'ask_user',
+    Agent: null, // auto-registered
+  },
+  copilot: {
+    Read: 'read',
+    Write: 'edit',
+    Edit: 'edit',
+    Bash: 'execute',
+    Grep: 'search',
+    Glob: 'search',
+    WebSearch: 'web',
+    WebFetch: 'web',
+    AskUserQuestion: 'ask_user',
+    Agent: 'agent',
+  },
+  cursor: {
+    Bash: 'Shell',
+    Edit: 'StrReplace',
+    AskUserQuestion: null, // use conversational prompting
+    Agent: null,
+  },
+  codex: {},
+  opencode: {
+    AskUserQuestion: 'question',
+    WebFetch: 'webfetch',
+    WebSearch: 'websearch',
   },
 };
 
 // ── CLI Flags ─────────────────────────────────────────
 const args = process.argv.slice(2);
 const flags = {
-  global: args.includes('--global'),
-  local: args.includes('--local'),
-  uninstall: args.includes('--uninstall'),
+  global: args.includes('--global') || args.includes('-g'),
+  local: args.includes('--local') || args.includes('-l'),
+  uninstall: args.includes('--uninstall') || args.includes('-u'),
   force: args.includes('--force'),
+  all: args.includes('--all'),
   help: args.includes('--help') || args.includes('-h'),
   // Runtime flags
   claude: args.includes('--claude'),
   gemini: args.includes('--gemini'),
   codex: args.includes('--codex'),
+  copilot: args.includes('--copilot'),
+  cursor: args.includes('--cursor'),
   opencode: args.includes('--opencode'),
 };
 
@@ -83,14 +152,18 @@ if (flags.help) {
   log('    npx product-builder@latest              Install (interactive)');
   log('    npx product-builder@latest --global     Install globally');
   log('    npx product-builder@latest --local      Install to project');
+  log('    npx product-builder@latest --all        Install to all detected CLIs');
   log('    npx product-builder@latest --uninstall  Remove installed files');
   log('    npx product-builder@latest --force      Overwrite without prompting');
   log('');
   log('  Runtime targets:');
-  log('    --claude      Claude Code   (~/.claude/)');
-  log('    --gemini      Gemini CLI    (~/.gemini/)');
-  log('    --codex       Codex         (~/.codex/)');
-  log('    --opencode    OpenCode      (~/.config/opencode/)');
+  log('    --claude      Claude Code       (~/.claude/)');
+  log('    --gemini      Gemini CLI        (~/.gemini/)');
+  log('    --codex       Codex             (~/.codex/)');
+  log('    --copilot     GitHub Copilot    (~/.copilot/)');
+  log('    --cursor      Cursor            (~/.cursor/)');
+  log('    --opencode    OpenCode          (~/.config/opencode/)');
+  log('    --all         All detected CLIs');
   log('');
   log('  If no runtime flag is provided, auto-detects installed CLIs.');
   log('');
@@ -100,14 +173,13 @@ if (flags.help) {
 // ── Runtime Detection ─────────────────────────────────
 function detectInstalledRuntimes(scope) {
   const detected = [];
-  // Check global first, then local. If both exist for the same runtime, prefer scope.
   const baseDirs = scope === 'local'
     ? [process.cwd(), os.homedir()]
     : [os.homedir(), process.cwd()];
 
   const seen = new Set();
 
-  // Check env var overrides first (e.g. CLAUDE_CONFIG_DIR)
+  // Check env var overrides first
   for (const [id, runtime] of Object.entries(RUNTIMES)) {
     for (const envVar of runtime.env) {
       const envPath = process.env[envVar];
@@ -137,37 +209,57 @@ function detectInstalledRuntimes(scope) {
   return detected;
 }
 
-function getExplicitRuntime() {
+function getExplicitRuntimes() {
+  const selected = [];
   for (const [id, runtime] of Object.entries(RUNTIMES)) {
     if (!flags[id]) continue;
+    let found = false;
     for (const dir of runtime.dirs) {
       const globalPath = path.join(os.homedir(), dir);
       const localPath = path.join(process.cwd(), dir);
-      // Prefer local when --local is set
       if (flags.local && fs.existsSync(localPath)) {
-        return { id, ...runtime, configDir: localPath, relDir: dir };
+        selected.push({ id, ...runtime, configDir: localPath, relDir: dir });
+        found = true;
+        break;
       }
-      // Check global first, fall back to local
       if (fs.existsSync(globalPath)) {
-        return { id, ...runtime, configDir: globalPath, relDir: dir };
+        selected.push({ id, ...runtime, configDir: globalPath, relDir: dir });
+        found = true;
+        break;
       }
       if (fs.existsSync(localPath)) {
-        return { id, ...runtime, configDir: localPath, relDir: dir };
+        selected.push({ id, ...runtime, configDir: localPath, relDir: dir });
+        found = true;
+        break;
       }
     }
-    logRed(`  ✗ ${runtime.name} not found (~/${runtime.dirs[0]}/ doesn't exist)`);
-    log(`    Install ${runtime.name} first, then re-run this installer.`);
-    process.exit(1);
+    if (!found) {
+      logRed(`  ✗ ${runtime.name} not found (~/${runtime.dirs[0]}/ doesn't exist)`);
+      log(`    Install ${runtime.name} first, then re-run this installer.`);
+      process.exit(1);
+    }
   }
-  return null;
+  return selected;
 }
 
-async function selectRuntime() {
-  // 1. Check for explicit runtime flag
-  const explicit = getExplicitRuntime();
-  if (explicit) return explicit;
+async function selectRuntimes() {
+  // 1. --all: install to every detected runtime
+  if (flags.all) {
+    const scope = flags.local ? 'local' : 'global';
+    const detected = detectInstalledRuntimes(scope);
+    if (detected.length === 0) {
+      logRed('  ✗ No supported AI CLI found.');
+      process.exit(1);
+    }
+    log(`  ${c.dim}Installing to all detected CLIs (${detected.map(r => r.name).join(', ')})${c.reset}`);
+    return detected;
+  }
 
-  // 2. Auto-detect installed runtimes
+  // 2. Explicit flags
+  const explicit = getExplicitRuntimes();
+  if (explicit.length > 0) return explicit;
+
+  // 3. Auto-detect
   const scope = flags.local ? 'local' : 'global';
   const detected = detectInstalledRuntimes(scope);
 
@@ -185,14 +277,11 @@ async function selectRuntime() {
 
   if (detected.length === 1) {
     log(`  ${c.dim}Detected:${c.reset} ${detected[0].name}`);
-    return detected[0];
+    return [detected[0]];
   }
 
-  // 3. Interactive selector for multiple runtimes
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+  // Interactive selector
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
   return new Promise((resolve) => {
     log(`  ${c.bold}Detected AI CLIs:${c.reset}`);
@@ -201,13 +290,19 @@ async function selectRuntime() {
       const marker = i === 0 ? ` ${c.dim}(default)${c.reset}` : '';
       log(`    ${c.cyan}${i + 1}${c.reset}  ${r.name} ${c.dim}~/${r.relDir}/${c.reset}${marker}`);
     });
+    log(`    ${c.cyan}a${c.reset}  All of the above`);
     log('');
     rl.question(`  Select target [${c.bold}1${c.reset}]: `, (answer) => {
       rl.close();
+      if (answer.toLowerCase() === 'a') {
+        log(`  ${c.dim}Installing to all${c.reset}`);
+        resolve(detected);
+        return;
+      }
       const idx = parseInt(answer || '1', 10) - 1;
       const selected = detected[Math.max(0, Math.min(idx, detected.length - 1))];
       log(`  ${c.dim}Installing to:${c.reset} ${selected.name}`);
-      resolve(selected);
+      resolve([selected]);
     });
   });
 }
@@ -216,28 +311,23 @@ async function selectRuntime() {
 async function resolveTarget(runtime) {
   if (flags.global) return runtime.configDir;
   if (flags.local) {
-    // For local, resolve relative to cwd
     for (const dir of runtime.dirs) {
       const localPath = path.join(process.cwd(), dir);
       if (fs.existsSync(localPath)) return localPath;
     }
-    // Create in first dir option
     const localPath = path.join(process.cwd(), runtime.dirs[0]);
     fs.mkdirSync(localPath, { recursive: true });
     return localPath;
   }
 
-  // If runtime was auto-detected, its configDir is already resolved
-  // But ask if both global and local exist
+  // For multi-runtime installs (--all), skip the global/local prompt
+  if (flags.all) return runtime.configDir;
+
   const globalPath = runtime.configDir;
   const localCandidates = runtime.dirs.map(d => path.join(process.cwd(), d)).filter(fs.existsSync);
 
   if (localCandidates.length > 0 && globalPath !== localCandidates[0]) {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     return new Promise((resolve) => {
       log('');
       log(`  ${c.cyan}g${c.reset} — Global install (${globalPath}) ${c.dim}recommended${c.reset}`);
@@ -253,31 +343,141 @@ async function resolveTarget(runtime) {
   return globalPath;
 }
 
+// ── Runtime Content Conversion (matching GSD) ────────
+
+// Replace ~/.claude/ paths with runtime-specific paths
+function replacePaths(content, runtimeId, dirName, isGlobal) {
+  if (runtimeId === 'claude') return content;
+  const target = dirName.replace(/^\./, '');
+  if (isGlobal) {
+    content = content.replace(/~\/\.claude\//g, `~/.${target}/`);
+    content = content.replace(/\$HOME\/\.claude\//g, `$HOME/.${target}/`);
+  } else {
+    content = content.replace(/~\/\.claude\//g, `.${target}/`);
+    content = content.replace(/\$HOME\/\.claude\//g, `.${target}/`);
+  }
+  content = content.replace(/\.\/\.claude\//g, `./.${target}/`);
+  return content;
+}
+
+// Convert allowed-tools in YAML frontmatter to runtime-specific tool names
+function convertToolNames(content, runtimeId) {
+  const toolMap = TOOL_MAPS[runtimeId];
+  if (!toolMap || Object.keys(toolMap).length === 0) return content;
+
+  return content.replace(/^(allowed-tools:\n)((?:\s+-\s+.+\n)+)/m, (match, header, tools) => {
+    const converted = tools.split('\n')
+      .filter(line => line.trim().startsWith('- '))
+      .map(line => {
+        const tool = line.trim().replace(/^-\s+/, '');
+        const mapped = toolMap.hasOwnProperty(tool) ? toolMap[tool] : tool.toLowerCase();
+        return mapped ? `  - ${mapped}` : null;
+      })
+      .filter(Boolean)
+      .join('\n');
+    return header + converted + '\n';
+  });
+}
+
+// Convert Claude .md command to Gemini TOML format (matching GSD's convertClaudeToGeminiToml)
+function convertToGeminiToml(content) {
+  if (!content.startsWith('---')) {
+    return `prompt = ${JSON.stringify(content)}\n`;
+  }
+
+  const endIndex = content.indexOf('---', 3);
+  if (endIndex === -1) {
+    return `prompt = ${JSON.stringify(content)}\n`;
+  }
+
+  const frontmatter = content.substring(3, endIndex).trim();
+  const body = content.substring(endIndex + 3).trim();
+
+  let description = '';
+  for (const line of frontmatter.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('description:')) {
+      description = trimmed.substring(12).trim();
+      break;
+    }
+  }
+
+  let toml = '';
+  if (description) {
+    toml += `description = ${JSON.stringify(description)}\n`;
+  }
+  toml += `prompt = ${JSON.stringify(body)}\n`;
+  return toml;
+}
+
+// Convert content for Cursor (matching GSD's convertClaudeToCursorMarkdown)
+function convertForCursor(content) {
+  let converted = content;
+  // Tool references in body text
+  converted = converted.replace(/\bBash\(/g, 'Shell(');
+  converted = converted.replace(/\bEdit\(/g, 'StrReplace(');
+  converted = converted.replace(/\bAskUserQuestion\b/g, 'conversational prompting');
+  // Path references
+  converted = converted.replace(/\.claude\/skills\//g, '.cursor/skills/');
+  converted = converted.replace(/\bClaude Code\b/g, 'Cursor');
+  return converted;
+}
+
 // ── File Operations ───────────────────────────────────
 function hashFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   return crypto.createHash('md5').update(content).digest('hex');
 }
 
-function copyRecursive(src, dest, manifest, stats, pathReplacer) {
+function copyWithReplacement(src, dest, manifest, stats, runtimeId, dirName, isGlobal, isCommand) {
   if (!fs.existsSync(src)) return;
 
-  const entries = fs.readdirSync(src, { withFileTypes: true });
+  // Clean install: remove existing dest to prevent orphaned files (matching GSD)
+  if (fs.existsSync(dest) && flags.force) {
+    fs.rmSync(dest, { recursive: true });
+  }
   fs.mkdirSync(dest, { recursive: true });
+
+  const entries = fs.readdirSync(src, { withFileTypes: true });
 
   for (const entry of entries) {
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
 
     if (entry.isDirectory()) {
-      copyRecursive(srcPath, destPath, manifest, stats, pathReplacer);
-    } else {
+      copyWithReplacement(srcPath, destPath, manifest, stats, runtimeId, dirName, isGlobal, isCommand);
+    } else if (entry.name.endsWith('.md')) {
       const relativePath = path.relative(dest, destPath);
-      const existed = fs.existsSync(destPath);
+      let content = fs.readFileSync(srcPath, 'utf-8');
 
+      // Apply path replacement
+      content = replacePaths(content, runtimeId, dirName, isGlobal);
+
+      // Apply tool name conversion for commands
+      if (isCommand) {
+        content = convertToolNames(content, runtimeId);
+      }
+
+      // Apply runtime-specific conversions
+      if (runtimeId === 'cursor') {
+        content = convertForCursor(content);
+      }
+
+      // Gemini commands: convert to TOML (matching GSD)
+      if (runtimeId === 'gemini' && isCommand) {
+        const tomlContent = convertToGeminiToml(content);
+        const tomlPath = destPath.replace(/\.md$/, '.toml');
+        fs.writeFileSync(tomlPath, tomlContent);
+        stats.created++;
+        manifest.push({ path: relativePath.replace(/\.md$/, '.toml'), hash: '' });
+        continue;
+      }
+
+      // Check for updates vs new
+      const existed = fs.existsSync(destPath);
       if (existed && !flags.force) {
         const existingHash = hashFile(destPath);
-        const newHash = hashFile(srcPath);
+        const newHash = crypto.createHash('md5').update(content).digest('hex');
         if (existingHash === newHash) {
           stats.skipped++;
           manifest.push({ path: relativePath, hash: newHash });
@@ -290,13 +490,16 @@ function copyRecursive(src, dest, manifest, stats, pathReplacer) {
         stats.updated++;
       }
 
-      let content = fs.readFileSync(srcPath, 'utf-8');
-      // Replace .claude/ paths with target runtime paths (like GSD's copyWithPathReplacement)
-      if (pathReplacer && entry.name.endsWith('.md')) {
-        content = pathReplacer(content);
-      }
       fs.writeFileSync(destPath, content);
       manifest.push({ path: relativePath, hash: hashFile(destPath) });
+    } else {
+      // Non-md files: copy as-is
+      const relativePath = path.relative(dest, destPath);
+      const existed = fs.existsSync(destPath);
+      if (!existed) stats.created++;
+      else stats.updated++;
+      fs.copyFileSync(srcPath, destPath);
+      manifest.push({ path: relativePath, hash: '' });
     }
   }
 }
@@ -304,53 +507,15 @@ function copyRecursive(src, dest, manifest, stats, pathReplacer) {
 // ── Installation Mapping ──────────────────────────────
 function getInstallMap(targetDir) {
   return [
-    {
-      src: path.join(PACKAGE_ROOT, 'commands'),
-      dest: path.join(targetDir, 'commands'),
-      label: 'commands/pm/',
-    },
-    {
-      src: path.join(PACKAGE_ROOT, 'skill'),
-      dest: path.join(targetDir, 'skills', 'prisma-pm'),
-      label: 'skills/prisma-pm/',
-    },
-    {
-      src: path.join(PACKAGE_ROOT, 'agents'),
-      dest: path.join(targetDir, 'skills', 'prisma-pm', 'agents'),
-      label: 'skills/prisma-pm/agents/',
-    },
-    {
-      src: path.join(PACKAGE_ROOT, 'frameworks'),
-      dest: path.join(targetDir, 'skills', 'prisma-pm', 'frameworks'),
-      label: 'skills/prisma-pm/frameworks/',
-    },
-    {
-      src: path.join(PACKAGE_ROOT, 'templates'),
-      dest: path.join(targetDir, 'skills', 'prisma-pm', 'templates'),
-      label: 'skills/prisma-pm/templates/',
-    },
-    {
-      src: path.join(PACKAGE_ROOT, 'workflows'),
-      dest: path.join(targetDir, 'skills', 'prisma-pm', 'workflows'),
-      label: 'skills/prisma-pm/workflows/',
-    },
-    {
-      src: path.join(PACKAGE_ROOT, 'references'),
-      dest: path.join(targetDir, 'skills', 'prisma-pm', 'references'),
-      label: 'skills/prisma-pm/references/',
-    },
-    {
-      src: path.join(PACKAGE_ROOT, 'bin', 'pm-tools.cjs'),
-      dest: path.join(targetDir, 'skills', 'prisma-pm', 'bin', 'pm-tools.cjs'),
-      label: 'skills/prisma-pm/bin/pm-tools.cjs',
-      isFile: true,
-    },
-    {
-      src: path.join(PACKAGE_ROOT, 'VERSION'),
-      dest: path.join(targetDir, 'skills', 'prisma-pm', 'VERSION'),
-      label: 'skills/prisma-pm/VERSION',
-      isFile: true,
-    },
+    { src: path.join(PACKAGE_ROOT, 'commands'), dest: path.join(targetDir, 'commands'), label: 'commands/pm/', isCommand: true },
+    { src: path.join(PACKAGE_ROOT, 'skill'), dest: path.join(targetDir, 'skills', 'prisma-pm'), label: 'skills/prisma-pm/' },
+    { src: path.join(PACKAGE_ROOT, 'agents'), dest: path.join(targetDir, 'skills', 'prisma-pm', 'agents'), label: 'skills/prisma-pm/agents/' },
+    { src: path.join(PACKAGE_ROOT, 'frameworks'), dest: path.join(targetDir, 'skills', 'prisma-pm', 'frameworks'), label: 'skills/prisma-pm/frameworks/' },
+    { src: path.join(PACKAGE_ROOT, 'templates'), dest: path.join(targetDir, 'skills', 'prisma-pm', 'templates'), label: 'skills/prisma-pm/templates/' },
+    { src: path.join(PACKAGE_ROOT, 'workflows'), dest: path.join(targetDir, 'skills', 'prisma-pm', 'workflows'), label: 'skills/prisma-pm/workflows/' },
+    { src: path.join(PACKAGE_ROOT, 'references'), dest: path.join(targetDir, 'skills', 'prisma-pm', 'references'), label: 'skills/prisma-pm/references/' },
+    { src: path.join(PACKAGE_ROOT, 'bin', 'pm-tools.cjs'), dest: path.join(targetDir, 'skills', 'prisma-pm', 'bin', 'pm-tools.cjs'), label: 'skills/prisma-pm/bin/pm-tools.cjs', isFile: true },
+    { src: path.join(PACKAGE_ROOT, 'VERSION'), dest: path.join(targetDir, 'skills', 'prisma-pm', 'VERSION'), label: 'skills/prisma-pm/VERSION', isFile: true },
   ];
 }
 
@@ -361,21 +526,18 @@ function registerHooks(configDir) {
   const hookPath = path.join(hookDir, 'pb-check-update.js');
   const hookCommand = `node "${hookPath}"`;
 
-  // Copy hook file
   fs.mkdirSync(hookDir, { recursive: true });
   const src = path.join(PACKAGE_ROOT, 'bin', 'pb-check-update.js');
   if (fs.existsSync(src)) {
     fs.copyFileSync(src, hookPath);
   }
 
-  // Read existing settings
   if (!fs.existsSync(settingsPath)) return;
   let settings;
   try {
     settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
   } catch (e) { return; }
 
-  // Append to SessionStart hooks (don't duplicate)
   if (!settings.hooks) settings.hooks = {};
   if (!settings.hooks.SessionStart) settings.hooks.SessionStart = [];
 
@@ -385,10 +547,7 @@ function registerHooks(configDir) {
 
   if (!alreadyRegistered) {
     settings.hooks.SessionStart.push({
-      hooks: [{
-        type: 'command',
-        command: hookCommand,
-      }],
+      hooks: [{ type: 'command', command: hookCommand }],
     });
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
   }
@@ -399,11 +558,8 @@ function patchStatusLine(configDir) {
   if (!fs.existsSync(statusLinePath)) return;
 
   let content = fs.readFileSync(statusLinePath, 'utf-8');
-
-  // Already patched?
   if (content.includes('pb-update-check.json')) return;
 
-  // Insert PB update check after the GSD update check block
   const marker = '    // Output';
   if (!content.includes(marker)) return;
 
@@ -414,7 +570,7 @@ function patchStatusLine(configDir) {
       try {
         const pbCache = JSON.parse(fs.readFileSync(pbCacheFile, 'utf8'));
         if (pbCache.update_available) {
-          pbUpdate = '\\x1b[33m\u2b06 /pm:update\\x1b[0m \u2502 ';
+          pbUpdate = '\\x1b[33m⬆ /pm:update\\x1b[0m │ ';
         }
       } catch (e) {}
     }
@@ -422,26 +578,20 @@ function patchStatusLine(configDir) {
     // Output`;
 
   content = content.replace(marker, pbBlock);
-
-  // Prepend pbUpdate to output lines
   content = content.replace(
     /process\.stdout\.write\(`\$\{gsdUpdate\}/g,
     'process.stdout.write(`${gsdUpdate}${pbUpdate}'
   );
-
   fs.writeFileSync(statusLinePath, content);
 }
 
 function removeHooks(configDir) {
-  // Remove hook file
   const hookPath = path.join(configDir, 'hooks', 'pb-check-update.js');
   if (fs.existsSync(hookPath)) fs.unlinkSync(hookPath);
 
-  // Remove cache
   const cachePath = path.join(configDir, 'cache', 'pb-update-check.json');
   if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath);
 
-  // Remove SessionStart entry from settings.json
   const settingsPath = path.join(configDir, 'settings.json');
   if (fs.existsSync(settingsPath)) {
     try {
@@ -455,7 +605,6 @@ function removeHooks(configDir) {
     } catch (e) {}
   }
 
-  // Remove PB patch from statusline
   const statusLinePath = path.join(configDir, 'hooks', 'gsd-statusline.js');
   if (fs.existsSync(statusLinePath)) {
     let content = fs.readFileSync(statusLinePath, 'utf-8');
@@ -471,36 +620,83 @@ function removeHooks(configDir) {
 function uninstall(targetDir, runtime) {
   const manifestPath = path.join(targetDir, MANIFEST_NAME);
   if (!fs.existsSync(manifestPath)) {
-    logYellow('  No Prisma PM installation found.');
+    logYellow(`  No Prisma PM installation found in ${runtime.name}.`);
     return;
   }
 
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
 
-  // Remove commands
   const pmCommandsDir = path.join(targetDir, 'commands', 'pm');
-  if (fs.existsSync(pmCommandsDir)) {
-    fs.rmSync(pmCommandsDir, { recursive: true });
-  }
+  if (fs.existsSync(pmCommandsDir)) fs.rmSync(pmCommandsDir, { recursive: true });
 
-  // Remove skill directory
   const skillDir = path.join(targetDir, 'skills', 'prisma-pm');
-  if (fs.existsSync(skillDir)) {
-    fs.rmSync(skillDir, { recursive: true });
-  }
+  if (fs.existsSync(skillDir)) fs.rmSync(skillDir, { recursive: true });
 
-  // Remove manifest
   fs.unlinkSync(manifestPath);
 
-  // Remove hooks only for runtimes that support them
-  if (runtime.supportsHooks) {
-    removeHooks(targetDir);
+  if (runtime.supportsHooks) removeHooks(targetDir);
+
+  log(`  ${c.green}✓${c.reset} Uninstalled v${manifest.version} from ${runtime.name}`);
+}
+
+// ── Install One Runtime ───────────────────────────────
+function installToRuntime(runtime, targetDir) {
+  const manifestPath = path.join(targetDir, MANIFEST_NAME);
+  const isGlobal = targetDir.startsWith(os.homedir());
+
+  if (fs.existsSync(manifestPath) && !flags.force) {
+    const existing = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+    logYellow(`  ${runtime.name}: v${existing.version} → v${VERSION}`);
   }
 
-  log('');
-  logGreen(`  ✓ Prisma PM v${manifest.version} uninstalled from ${runtime.name}`);
-  log(`    Removed from: ${targetDir}`);
-  log('');
+  const allManifestEntries = [];
+  const stats = { created: 0, updated: 0, skipped: 0 };
+  const installMap = getInstallMap(targetDir);
+
+  for (const mapping of installMap) {
+    if (mapping.isFile) {
+      const destDir = path.dirname(mapping.dest);
+      fs.mkdirSync(destDir, { recursive: true });
+      if (fs.existsSync(mapping.src)) {
+        let content = fs.readFileSync(mapping.src, 'utf-8');
+        if (mapping.src.endsWith('.md')) {
+          content = replacePaths(content, runtime.id, runtime.dirName, isGlobal);
+        }
+        fs.writeFileSync(mapping.dest, content);
+        stats.created++;
+        allManifestEntries.push({ path: mapping.label, hash: '' });
+      }
+    } else {
+      copyWithReplacement(
+        mapping.src, mapping.dest, allManifestEntries, stats,
+        runtime.id, runtime.dirName, isGlobal, !!mapping.isCommand
+      );
+    }
+  }
+
+  // Write manifest
+  fs.writeFileSync(
+    manifestPath,
+    JSON.stringify({
+      version: VERSION,
+      runtime: runtime.id,
+      runtime_name: runtime.name,
+      installed_at: new Date().toISOString(),
+      target: targetDir,
+      files: allManifestEntries,
+    }, null, 2)
+  );
+
+  // Hooks (Claude Code only)
+  if (runtime.supportsHooks) {
+    registerHooks(targetDir);
+  }
+  if (runtime.supportsStatusLine) {
+    patchStatusLine(targetDir);
+  }
+
+  const hookNote = runtime.supportsHooks ? ' + hook' : '';
+  log(`  ${c.green}✓${c.reset} ${runtime.name} — ${stats.created} new, ${stats.updated} updated, ${stats.skipped} unchanged${hookNote}`);
 }
 
 // ── True-Color Gradient ──────────────────────────────
@@ -581,91 +777,31 @@ async function main() {
   printLogo();
   log('');
 
-  // Select runtime (auto-detect or explicit flag)
-  const runtime = await selectRuntime();
-  const targetDir = await resolveTarget(runtime);
+  // Select runtime(s)
+  const runtimes = await selectRuntimes();
 
+  // Resolve targets and execute
   if (flags.uninstall) {
-    uninstall(targetDir, runtime);
+    for (const runtime of runtimes) {
+      const targetDir = await resolveTarget(runtime);
+      uninstall(targetDir, runtime);
+    }
+    log('');
     return;
   }
 
-  // Check for existing installation
-  const manifestPath = path.join(targetDir, MANIFEST_NAME);
-  if (fs.existsSync(manifestPath) && !flags.force) {
-    const existing = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-    logYellow(`  Existing installation found: v${existing.version}`);
-    log(`  Updating to v${VERSION}...`);
-  }
-
-  const allManifestEntries = [];
-  const stats = { created: 0, updated: 0, skipped: 0 };
-  const installMap = getInstallMap(targetDir);
-
-  // Build path replacer for non-Claude runtimes (like GSD's copyWithPathReplacement)
-  // Replaces ~/.claude/ paths with the target runtime's path in .md files
-  let pathReplacer = null;
-  if (runtime.id !== 'claude') {
-    const runtimeDir = runtime.relDir; // e.g. '.gemini', '.codex'
-    pathReplacer = (content) => {
-      return content
-        .replace(/~\/\.claude\//g, `~/.${runtimeDir.replace(/^\./, '')}/`)
-        .replace(/\$HOME\/\.claude\//g, `$HOME/.${runtimeDir.replace(/^\./, '')}/`);
-    };
-  }
-
   log('');
-
-  for (const mapping of installMap) {
-    if (mapping.isFile) {
-      const destDir = path.dirname(mapping.dest);
-      fs.mkdirSync(destDir, { recursive: true });
-      if (fs.existsSync(mapping.src)) {
-        let content = fs.readFileSync(mapping.src, 'utf-8');
-        if (pathReplacer && mapping.src.endsWith('.md')) {
-          content = pathReplacer(content);
-        }
-        fs.writeFileSync(mapping.dest, content);
-        stats.created++;
-        allManifestEntries.push({ path: mapping.label, hash: '' });
-      }
-    } else {
-      copyRecursive(mapping.src, mapping.dest, allManifestEntries, stats, pathReplacer);
-    }
-    log(`  ${c.green}✓${c.reset} Installed ${mapping.label}`);
-  }
-
-  // Write manifest (includes runtime info)
-  fs.writeFileSync(
-    manifestPath,
-    JSON.stringify(
-      {
-        version: VERSION,
-        runtime: runtime.id,
-        runtime_name: runtime.name,
-        installed_at: new Date().toISOString(),
-        target: targetDir,
-        files: allManifestEntries,
-      },
-      null,
-      2
-    )
-  );
-
-  // Register hooks only for runtimes that support them
-  if (runtime.supportsHooks) {
-    registerHooks(targetDir);
-    log(`  ${c.green}✓${c.reset} Registered update check hook`);
-  }
-  if (runtime.supportsStatusLine) {
-    patchStatusLine(targetDir);
+  for (const runtime of runtimes) {
+    const targetDir = await resolveTarget(runtime);
+    installToRuntime(runtime, targetDir);
   }
 
   // Success banner
   log('');
   logGreen(`  ✦ Done!`);
-  log(`  ${c.dim}Installed to ${runtime.name} (${targetDir})${c.reset}`);
-  log(`  ${c.dim}${stats.created} created, ${stats.updated} updated, ${stats.skipped} unchanged${c.reset}`);
+  if (runtimes.length > 1) {
+    log(`  ${c.dim}Installed to ${runtimes.length} runtimes${c.reset}`);
+  }
 
   // Commands reference
   log('');
@@ -683,12 +819,10 @@ async function main() {
   log(`  ${c.cyan}/pm:help${c.reset}             Full command reference`);
   log(`  ${c.cyan}/pm:update${c.reset}           Check for latest version`);
 
-  // Origin + brand
   log('');
   log(`  ${c.dim}From Latin America, for the world.${c.reset}  ${c.cyan}#VamosLatam${c.reset}`);
   log(`  ${c.cyan}getprisma.lat/product-builder${c.reset}`);
 
-  // Getting started
   log('');
   log(`  Run ${c.cyan}/pm:help${c.reset} to get started. ✦`);
   log('');
