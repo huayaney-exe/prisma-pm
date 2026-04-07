@@ -1,7 +1,7 @@
 {
   "name": "product-builder",
-  "version": "0.2.7",
-  "description": "Context-resilient system for transformation-driven product building with Claude Code.",
+  "version": "0.3.0",
+  "description": "Context-resilient system for transformation-driven product building. Works with Claude Code, Gemini CLI, Codex, and OpenCode.",
   "bin": {
     "product-builder": "./bin/install.js"
   },
@@ -15,6 +15,7 @@
     "workflows/",
     "references/",
     "context/",
+    "VERSION",
     "README.md",
     "LICENSE"
   ],
@@ -31,7 +32,11 @@
     "prd",
     "jtbd",
     "discovery",
-    "context-engineering"
+    "context-engineering",
+    "multi-runtime",
+    "gemini-cli",
+    "codex",
+    "opencode"
   ],
   "author": "Luis Huayaney",
   "license": "MIT",

@@ -92,6 +92,15 @@ function today() {
   return timestamp().split('T')[0];
 }
 
+function findUpdateCache() {
+  const home = os.homedir();
+  for (const dir of ['.claude', '.gemini', '.codex', '.config/opencode', '.opencode']) {
+    const candidate = path.join(home, dir, 'cache', 'pb-update-check.json');
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return path.join(home, '.claude', 'cache', 'pb-update-check.json');
+}
+
 function outputJSON(data) {
   console.log(JSON.stringify(data, null, 2));
 }
@@ -311,8 +320,8 @@ function init(command, slug, includes) {
     result.requirements_content = safeReadFile(path.join(productDir, 'DEFINITIONS', `${slug}-REQUIREMENTS.md`));
   }
 
-  // Check for update cache
-  const cacheFile = path.join(os.homedir(), '.claude', 'cache', 'pb-update-check.json');
+  // Check for update cache (scan runtimes)
+  const cacheFile = findUpdateCache();
   try {
     if (fs.existsSync(cacheFile)) {
       const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf-8'));

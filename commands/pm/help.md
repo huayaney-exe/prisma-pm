@@ -13,8 +13,17 @@ Show available Prisma PM commands, current project state, and contextual guidanc
 <process>
 ## Step 1: Check for .product/ workspace
 
+Detect which runtime is active by checking this command's execution_context path, then find pm-tools.cjs:
+
 ```bash
-node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs init help "" --include state,config 2>/dev/null
+# Check runtimes in order — use whichever has prisma-pm installed
+for DIR in ".claude" ".gemini" ".codex" ".config/opencode" ".opencode"; do
+  TOOLS="$HOME/$DIR/skills/prisma-pm/bin/pm-tools.cjs"
+  if [ -f "$TOOLS" ]; then
+    node "$TOOLS" init help "" --include state,config 2>/dev/null
+    break
+  fi
+done
 ```
 
 ## Step 2: Display Command Reference

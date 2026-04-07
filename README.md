@@ -91,9 +91,11 @@ Run `/pm:power` standalone — no project setup needed. Score anything in your t
 npx product-builder@latest
 ```
 
-The installer prompts you to choose:
-- **Global** (`~/.claude/`) — Available in all projects (recommended)
-- **Local** (`./.claude/`) — Current project only
+The installer auto-detects your AI CLI and prompts you to choose scope:
+- **Global** — Available in all projects (recommended)
+- **Local** — Current project only
+
+Supports: **Claude Code**, **Gemini CLI**, **Codex**, **OpenCode**. Use `--claude`, `--gemini`, `--codex`, or `--opencode` to target a specific runtime.
 
 Verify with:
 ```
@@ -104,8 +106,9 @@ Verify with:
 <summary><strong>Non-interactive Install</strong></summary>
 
 ```bash
-npx product-builder@latest --global    # Install to ~/.claude/
-npx product-builder@latest --local     # Install to ./.claude/
+npx product-builder@latest --global    # Install globally
+npx product-builder@latest --local     # Install to current project
+npx product-builder@latest --gemini    # Target Gemini CLI specifically
 npx product-builder@latest --force     # Overwrite without prompting
 npx product-builder@latest --uninstall # Remove installed files
 ```

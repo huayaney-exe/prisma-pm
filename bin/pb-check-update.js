@@ -1,6 +1,8 @@
 #!/usr/bin/env node
+// pb-hook-version: 0.3.0
 // Check for Product Builder updates in background, write result to cache
 // Called by SessionStart hook - runs once per session
+// Supports multi-runtime detection (Claude Code, Gemini CLI, Codex, OpenCode)
 
 const fs = require('fs');
 const path = require('path');
@@ -9,19 +11,39 @@ const { spawn } = require('child_process');
 
 const homeDir = os.homedir();
 const cwd = process.cwd();
-const cacheDir = path.join(homeDir, '.claude', 'cache');
+
+// Detect runtime config directory (supports Claude, Gemini, Codex, OpenCode)
+function detectConfigDir(baseDir) {
+  // Check env override first
+  const envDir = process.env.CLAUDE_CONFIG_DIR;
+  if (envDir && fs.existsSync(path.join(envDir, 'skills', 'prisma-pm', 'VERSION'))) {
+    return envDir;
+  }
+  // Scan known runtime dirs for prisma-pm installation
+  for (const dir of ['.config/opencode', '.opencode', '.gemini', '.codex', '.claude']) {
+    const candidate = path.join(baseDir, dir);
+    if (fs.existsSync(path.join(candidate, 'skills', 'prisma-pm', 'VERSION'))) {
+      return candidate;
+    }
+  }
+  return envDir || path.join(baseDir, '.claude');
+}
+
+const globalConfigDir = detectConfigDir(homeDir);
+const projectConfigDir = detectConfigDir(cwd);
+const cacheDir = path.join(globalConfigDir, 'cache');
 const cacheFile = path.join(cacheDir, 'pb-update-check.json');
 
 // VERSION file locations (check project first, then global)
-const projectVersionFile = path.join(cwd, '.claude', 'skills', 'prisma-pm', 'VERSION');
-const globalVersionFile = path.join(homeDir, '.claude', 'skills', 'prisma-pm', 'VERSION');
+const projectVersionFile = path.join(projectConfigDir, 'skills', 'prisma-pm', 'VERSION');
+const globalVersionFile = path.join(globalConfigDir, 'skills', 'prisma-pm', 'VERSION');
 
 // Ensure cache directory exists
 if (!fs.existsSync(cacheDir)) {
   fs.mkdirSync(cacheDir, { recursive: true });
 }
 
-// Run check in background (spawn detached process, windowsHide prevents console flash)
+// Run check in background (spawn detached process)
 const child = spawn(process.execPath, ['-e', `
   const fs = require('fs');
   const { execSync } = require('child_process');
