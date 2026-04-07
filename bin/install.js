@@ -259,7 +259,7 @@ function hashFile(filePath) {
   return crypto.createHash('md5').update(content).digest('hex');
 }
 
-function copyRecursive(src, dest, manifest, stats) {
+function copyRecursive(src, dest, manifest, stats, pathReplacer) {
   if (!fs.existsSync(src)) return;
 
   const entries = fs.readdirSync(src, { withFileTypes: true });
@@ -270,7 +270,7 @@ function copyRecursive(src, dest, manifest, stats) {
     const destPath = path.join(dest, entry.name);
 
     if (entry.isDirectory()) {
-      copyRecursive(srcPath, destPath, manifest, stats);
+      copyRecursive(srcPath, destPath, manifest, stats, pathReplacer);
     } else {
       const relativePath = path.relative(dest, destPath);
       const existed = fs.existsSync(destPath);
@@ -290,7 +290,11 @@ function copyRecursive(src, dest, manifest, stats) {
         stats.updated++;
       }
 
-      const content = fs.readFileSync(srcPath, 'utf-8');
+      let content = fs.readFileSync(srcPath, 'utf-8');
+      // Replace .claude/ paths with target runtime paths (like GSD's copyWithPathReplacement)
+      if (pathReplacer && entry.name.endsWith('.md')) {
+        content = pathReplacer(content);
+      }
       fs.writeFileSync(destPath, content);
       manifest.push({ path: relativePath, hash: hashFile(destPath) });
     }
@@ -298,21 +302,12 @@ function copyRecursive(src, dest, manifest, stats) {
 }
 
 // ── Installation Mapping ──────────────────────────────
-function getInstallMap(targetDir, runtimeId) {
-  // Claude Code: commands go to commands/pm/ (native slash command discovery)
-  // Other runtimes: commands go inside the skill dir (discovered via SKILL.md)
-  const commandsDest = runtimeId === 'claude'
-    ? path.join(targetDir, 'commands')
-    : path.join(targetDir, 'skills', 'prisma-pm', 'commands');
-  const commandsLabel = runtimeId === 'claude'
-    ? 'commands/pm/'
-    : 'skills/prisma-pm/commands/pm/';
-
+function getInstallMap(targetDir) {
   return [
     {
       src: path.join(PACKAGE_ROOT, 'commands'),
-      dest: commandsDest,
-      label: commandsLabel,
+      dest: path.join(targetDir, 'commands'),
+      label: 'commands/pm/',
     },
     {
       src: path.join(PACKAGE_ROOT, 'skill'),
@@ -482,14 +477,10 @@ function uninstall(targetDir, runtime) {
 
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
 
-  // Remove commands (Claude: commands/pm/, others: inside skill dir)
+  // Remove commands
   const pmCommandsDir = path.join(targetDir, 'commands', 'pm');
   if (fs.existsSync(pmCommandsDir)) {
     fs.rmSync(pmCommandsDir, { recursive: true });
-  }
-  const skillCommandsDir = path.join(targetDir, 'skills', 'prisma-pm', 'commands');
-  if (fs.existsSync(skillCommandsDir)) {
-    fs.rmSync(skillCommandsDir, { recursive: true });
   }
 
   // Remove skill directory
@@ -609,7 +600,19 @@ async function main() {
 
   const allManifestEntries = [];
   const stats = { created: 0, updated: 0, skipped: 0 };
-  const installMap = getInstallMap(targetDir, runtime.id);
+  const installMap = getInstallMap(targetDir);
+
+  // Build path replacer for non-Claude runtimes (like GSD's copyWithPathReplacement)
+  // Replaces ~/.claude/ paths with the target runtime's path in .md files
+  let pathReplacer = null;
+  if (runtime.id !== 'claude') {
+    const runtimeDir = runtime.relDir; // e.g. '.gemini', '.codex'
+    pathReplacer = (content) => {
+      return content
+        .replace(/~\/\.claude\//g, `~/.${runtimeDir.replace(/^\./, '')}/`)
+        .replace(/\$HOME\/\.claude\//g, `$HOME/.${runtimeDir.replace(/^\./, '')}/`);
+    };
+  }
 
   log('');
 
@@ -618,12 +621,16 @@ async function main() {
       const destDir = path.dirname(mapping.dest);
       fs.mkdirSync(destDir, { recursive: true });
       if (fs.existsSync(mapping.src)) {
-        fs.copyFileSync(mapping.src, mapping.dest);
+        let content = fs.readFileSync(mapping.src, 'utf-8');
+        if (pathReplacer && mapping.src.endsWith('.md')) {
+          content = pathReplacer(content);
+        }
+        fs.writeFileSync(mapping.dest, content);
         stats.created++;
         allManifestEntries.push({ path: mapping.label, hash: '' });
       }
     } else {
-      copyRecursive(mapping.src, mapping.dest, allManifestEntries, stats);
+      copyRecursive(mapping.src, mapping.dest, allManifestEntries, stats, pathReplacer);
     }
     log(`  ${c.green}✓${c.reset} Installed ${mapping.label}`);
   }
