@@ -6,6 +6,12 @@ Generate realistic synthetic personas from ICP and discovery data. Each persona 
 Read all files referenced by the invoking command's execution_context before starting.
 </required_reading>
 
+<runtime_compatibility>
+**Agent spawning is runtime-specific:**
+- **Claude Code / Cursor / OpenCode:** Use `Agent(subagent_type="general-purpose", ...)` to spawn persona-architect agents in parallel (one per persona)
+- **Gemini CLI / Codex / Copilot:** Agent tool unavailable. Read the agent file (`~/.claude/skills/prisma-pm/agents/persona-architect.md`) and generate each persona sequentially inline — adopt the role, follow the full process for each persona one at a time
+</runtime_compatibility>
+
 <process>
 
 ## 1. Setup
@@ -40,9 +46,11 @@ Check for existing personas in `.product/PERSONAS/`:
 
 "Found {N} existing personas: {names}. New personas will be generated to complement these — varying by different dimensions."
 
-## 4. Spawn Persona Architects
+## 4. Generate Personas
 
-For each persona, spawn a persona-architect agent. Generate in parallel when count > 1.
+For each persona, use a persona-architect agent (or execute inline — see `<runtime_compatibility>`).
+
+**If Agent tool is available** (Claude Code, Cursor, OpenCode) — spawn in parallel:
 
 ```
 ◆ Spawning {count} persona-architect agents...
@@ -146,6 +154,18 @@ Display completion for each:
 ```
 ✓ Persona {N} complete: {Name} — {one-line circumstance}
 ```
+
+**If Agent tool is NOT available** (Gemini, Codex, Copilot) — generate sequentially inline:
+
+Read `~/.claude/skills/prisma-pm/agents/persona-architect.md` once. Then for each persona (1 through {count}):
+1. Adopt the persona-architect role
+2. Use the same ICP, product, discovery, and existing persona context above as input
+3. Follow every step in `<process>` for persona #{N}
+4. Ensure diversity across dimensions (circumstance intensity, decision style, technical sophistication, org context, adoption tendency)
+5. Format output per `<output_format>`
+6. Display: `✓ Persona {N} complete: {Name} — {one-line circumstance}`
+
+After all personas are generated inline, proceed to the Diversity Check below.
 
 ## 5. Diversity Check
 

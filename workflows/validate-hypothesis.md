@@ -6,6 +6,12 @@ Design fast validation experiments with clear kill criteria. Prevents the "build
 Read all files referenced by the invoking command's execution_context before starting.
 </required_reading>
 
+<runtime_compatibility>
+**Agent spawning is runtime-specific:**
+- **Claude Code / Cursor / OpenCode:** Use `Agent(subagent_type="general-purpose", ...)` to spawn experiment-designer as a subprocess
+- **Gemini CLI / Codex / Copilot:** Agent tool unavailable. Read the agent file (`~/.claude/skills/prisma-pm/agents/experiment-designer.md`) and execute its full process inline — adopt the role, follow every process step, validate against checkpoints, format output per output_format
+</runtime_compatibility>
+
 <process>
 
 ## 1. Setup
@@ -88,7 +94,9 @@ Loop until approved (max 3 iterations).
 
 ## 5. Experiment Design
 
-Spawn experiment-designer agent:
+Spawn experiment-designer agent (or execute inline — see `<runtime_compatibility>`):
+
+**If Agent tool is available** (Claude Code, Cursor, OpenCode):
 
 ```
 ◆ Spawning experiment-designer agent...
@@ -133,6 +141,15 @@ Return structured analysis in markdown.
 ```
 ✓ Experiment designer complete: Validation plan ready
 ```
+
+**If Agent tool is NOT available** (Gemini, Codex, Copilot):
+Read `~/.claude/skills/prisma-pm/agents/experiment-designer.md` now. Execute its full process inline:
+1. Adopt the experiment-designer role
+2. Use the same hypothesis, ICP context, and constraints above as input
+3. Follow every step in `<process>` (experiment type selection, sample size, kill criteria, bias mitigation)
+4. Validate against `<checkpoints>` before continuing
+5. Format output per `<output_format>`
+Then continue this workflow with the results.
 
 ## 6. Synthetic Persona Pre-Validation (optional)
 

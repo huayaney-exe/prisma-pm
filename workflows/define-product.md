@@ -6,6 +6,12 @@ Write context-engineered PRDs that are self-sufficient for AI-assisted implement
 Read all files referenced by the invoking command's execution_context before starting.
 </required_reading>
 
+<runtime_compatibility>
+**Agent spawning is runtime-specific:**
+- **Claude Code / Cursor / OpenCode:** Use `Agent(subagent_type="general-purpose", ...)` to spawn delivery-architect as a subprocess
+- **Gemini CLI / Codex / Copilot:** Agent tool unavailable. Read the agent file (`~/.claude/skills/prisma-pm/agents/delivery-architect.md`) and execute its full process inline — adopt the role, follow every process step, validate against checkpoints, format output per output_format
+</runtime_compatibility>
+
 <freeform_rule>
 When the user wants to explain freely, STOP using AskUserQuestion.
 
@@ -144,7 +150,9 @@ Use AskUserQuestion:
 
 If "Keep exploring": return to context gathering / solution definition, ask what they want to add, then re-present this gate.
 
-If "Analyze it": spawn the delivery-architect agent.
+If "Analyze it": spawn the delivery-architect agent (or execute inline — see `<runtime_compatibility>`).
+
+**If Agent tool is available** (Claude Code, Cursor, OpenCode):
 
 ```
 ◆ Spawning delivery-architect agent...
@@ -186,6 +194,15 @@ Return structured analysis in markdown.
 ```
 ✓ Delivery architect complete: Technical decomposition ready
 ```
+
+**If Agent tool is NOT available** (Gemini, Codex, Copilot):
+Read `~/.claude/skills/prisma-pm/agents/delivery-architect.md` now. Execute its full process inline:
+1. Adopt the delivery-architect role
+2. Use the same feature context, product context, and task above as input
+3. Follow every step in `<process>` (data model, API shape, edge cases, constraints, patterns)
+4. Validate against `<checkpoints>` before continuing
+5. Format output per `<output_format>`
+Then continue this workflow with the results.
 
 ## 6. Write PRD
 

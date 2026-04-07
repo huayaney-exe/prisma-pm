@@ -121,7 +121,15 @@ If "Analyze it": proceed to Agent Analysis.
 
 ## 5. Agent Analysis
 
-After the decision gate, spawn two agents in parallel for deeper analysis:
+<runtime_compatibility>
+**Agent spawning is runtime-specific:**
+- **Claude Code / Cursor / OpenCode:** Use `Agent()` to spawn both agents in parallel — customer-voice and strategic-advisor run simultaneously
+- **Gemini CLI / Codex / Copilot:** Agent tool unavailable. Execute both analyses sequentially inline — read each agent file and follow its full process. Run customer-voice first, then strategic-advisor
+</runtime_compatibility>
+
+After the decision gate, perform deeper analysis with two specialist agents:
+
+**If Agent tool is available** (Claude Code, Cursor, OpenCode) — spawn in parallel:
 
 ```
 ◆ Spawning 2 agents in parallel...
@@ -197,6 +205,32 @@ Display completion:
 ```
 ✓ Customer voice complete: JTBD analysis ready
 ✓ Strategic advisor complete: Assumption audit ready
+```
+
+**If Agent tool is NOT available** (Gemini, Codex, Copilot) — execute sequentially inline:
+
+**Step 5a: Customer Voice Analysis (inline)**
+Read `~/.claude/skills/prisma-pm/agents/customer-voice.md` now. Execute its full process inline:
+1. Adopt the customer-voice role
+2. Use the discovery context, ICP context, and persona context above as input
+3. Follow every step in `<process>` (JTBD extraction, transformation mapping, hiring/firing criteria, alternatives, unmet needs)
+4. Validate against `<checkpoints>`
+5. Format output per `<output_format>` — store the results for integration into the Discovery Brief
+
+```
+✓ Customer voice analysis complete (inline)
+```
+
+**Step 5b: Strategic Advisor Review (inline)**
+Read `~/.claude/skills/prisma-pm/agents/strategic-advisor.md` now. Execute its full process inline:
+1. Adopt the strategic-advisor role
+2. Use the discovery context and product context above as input
+3. Follow every step in `<process>` (Product Power scoring, assumption audit, blind spots, strategic alignment)
+4. Validate against `<checkpoints>`
+5. Format output per `<output_format>` — store the results for integration into the Discovery Brief
+
+```
+✓ Strategic advisor review complete (inline)
 ```
 
 ## 6. Synthesize Discovery Brief

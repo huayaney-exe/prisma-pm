@@ -6,6 +6,12 @@ Produce a Design Specification that covers the FEEL layer — messaging strategy
 Read all files referenced by the invoking command's execution_context before starting.
 </required_reading>
 
+<runtime_compatibility>
+**Agent spawning is runtime-specific:**
+- **Claude Code / Cursor / OpenCode:** Use `Agent(subagent_type="general-purpose", ...)` to spawn design-critic as a subprocess
+- **Gemini CLI / Codex / Copilot:** Agent tool unavailable. Read the agent file (`~/.claude/skills/prisma-pm/agents/design-critic.md`) and execute its full process inline — adopt the role, follow every process step, validate against checkpoints, format output per output_format
+</runtime_compatibility>
+
 <freeform_rule>
 When the user wants to explain freely, STOP using AskUserQuestion.
 
@@ -124,9 +130,11 @@ Use AskUserQuestion:
 
 If "Keep exploring": return to context gathering, ask what they want to add, then re-present this gate.
 
-If "Critique it": proceed to agent spawning.
+If "Critique it": proceed to agent analysis (or execute inline — see `<runtime_compatibility>`).
 
 ## 6. Design Critic Analysis
+
+**If Agent tool is available** (Claude Code, Cursor, OpenCode):
 
 ```
 ◆ Spawning design-critic agent...
@@ -193,6 +201,15 @@ Return structured analysis in markdown following your output_format.
 ```
 ✓ Design critic complete: Critique ready
 ```
+
+**If Agent tool is NOT available** (Gemini, Codex, Copilot):
+Read `~/.claude/skills/prisma-pm/agents/design-critic.md` now. Execute its full process inline:
+1. Adopt the design-critic role
+2. Use the same design intent, feature context, product context, and ICP context above as input
+3. Follow every step in `<process>` (4-Question Test, CTA audit, IA evaluation, flow critique, anti-slop check, design system assessment)
+4. Validate against `<checkpoints>` before continuing
+5. Format output per `<output_format>`
+Then continue this workflow with the results.
 
 ## 7. Write Design Specification
 
