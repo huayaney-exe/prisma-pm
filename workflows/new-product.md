@@ -289,7 +289,7 @@ If "Needs changes": switch to plain text and ask what they want to adjust. Updat
 
 ### Praxis (PRAXIS mode)
 
-`/pm:new` is silent about Praxis: no pitch, no question — except the single product-match question from `praxis.md` §1.
+`/pm:new` is silent about Praxis: no pitch, no question — except the single product-resolution question from `praxis.md` §1 (asked only when the workspace already has products, so an existing product under another name isn't duplicated).
 
 1. `pm_create_product` — `name`, `role: "owner"`, `visibility: "team"`, `transformation: {"<From, verbatim>": "<To, verbatim>"}`, `power_score: round(score / 10)`, `power_tier: "<tier>"`, `idempotency_key: "pb:product:<slug>"`.
 2. Link it: `node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis link --workspace "<workspace_id>" --product "<product_id>" --workspace-name "<workspace_name>"` (workspace from `pm_get_state`).

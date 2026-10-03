@@ -23,9 +23,10 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis status
 ```
 
 - **Linked** (`linked: true`): call `pm_get_state` with `product_id`. If `cursor` is set, call `pm_get_changes(since_cursor)` and iterate while `truncated=true`. If a change touches an artifact this workflow reads (vision, ICP, a PRD…), fetch it with `pm_get_artifact` (`view: "full"`) and overwrite the local mirror file **before** working — Praxis wins, a teammate may have changed it. Save the new cursor: `praxis cursor <cursor>`.
-- **Not linked**: resolve the product silently. Call `pm_get_state` (no arguments) and look in `about[]` for a product whose name matches `product_name` in `.product/config.json` (case-insensitive).
-  - One match → ask once: *link to "{name}" in Praxis* or *create a new product*.
-  - No match → `/pm:new` creates it (see its workflow); any other workflow creates it from `PRODUCT.md` with `pm_create_product` (§3, `/pm:new` row) — no question.
+- **Not linked**: resolve the product before creating anything — a product may already exist under another name. Call `pm_get_state` (no arguments) and read `about[]` (each product's name and its one-line `is`).
+  - `about[]` is empty → create it: `/pm:new` per its workflow; any other workflow from `PRODUCT.md` with `pm_create_product` (§3, `/pm:new` row). No question.
+  - `about[]` has products → ask once (AskUserQuestion), header "Praxis", question *"Is '{product_name}' one of these Praxis products?"*, options: the closest matches first (same or similar name, or an `is` that describes the same transformation — up to 3, each labeled `{name} — {is}`), then *"No — create '{product_name}'"*. Never create silently when products exist.
+  - Multi-workspace users: if the active workspace has no plausible match, check `pm_list_workspaces` and mention which workspace the product will be created in.
   - Then: `praxis link --workspace <workspace.id> --product <id> --workspace-name "<workspace.name>"`.
   - If `praxis status` shows other unsynced local artifacts, do not upload them here — mention `/pm:praxis` in the result line.
 
@@ -43,7 +44,8 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis status
 ## 2. Write rules (PRAXIS mode)
 
 - **Visibility: always `team`.**
-- **No confirmation per write.** Saving is the default. The only questions are the ones listed in this file (product match in §1, commit rite in `/pm:validate`).
+- **No confirmation per write.** Saving is the default. The only questions are the ones listed in this file (product resolution in §1, commit rite in `/pm:validate`).
+- **Work item visibility**: `pm_add_work_item` has no `visibility` input and Praxis creates work items as personal. Don't try to work around it; artifacts and learnings still go `team`.
 - **Re-runs version, never duplicate.** Before saving, `praxis get <key>`. If a record exists → `pm_update_artifact(artifact_id, markdown, bump_version: true)`. Otherwise → `pm_save_artifact`.
 - **Keys**: product-level kinds use the bare kind (`vision`, `icp`); everything else is `<kind>/<slug>` (`persona/andrea`, `discovery/{slug}`, `prd/{slug}`, `work_item/{slug}`).
 - **Idempotency**: pass `idempotency_key: "pb:<key>:<YYYY-MM-DD>"` on every write.
