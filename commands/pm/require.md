@@ -8,6 +8,10 @@ allowed-tools:
   - Bash
   - Agent
   - AskUserQuestion
+  - mcp__praxis
+  - mcp__prisma
+  - mcp__claude_ai_prisma
+  - mcp__plugin_pm_praxis
 ---
 <context>
 Transform a PRD into implementable user stories with Given/When/Then acceptance criteria. The bridge between PM and engineering.
@@ -23,6 +27,7 @@ Transform a PRD into implementable user stories with Given/When/Then acceptance 
 @prisma-pm/skill/rules/philosophy.md
 @prisma-pm/skill/rules/context-engineering.md
 @prisma-pm/references/ui-brand.md
+@prisma-pm/references/praxis.md
 </execution_context>
 
 <process>

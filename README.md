@@ -300,6 +300,7 @@ Workflows include `<runtime_compatibility>` blocks with conditional execution pa
 
 | Command | What It Does |
 |---------|--------------|
+| `/pm:praxis` | Connect Praxis, link the product, upload everything in `.product/` |
 | `/pm:help` | Full command reference + current project state |
 | `/pm:update` | Check for and install latest version |
 
@@ -307,7 +308,7 @@ Workflows include `<runtime_compatibility>` blocks with conditional execution pa
 
 ## Praxis — Product Memory
 
-Product Builder is the method. **Praxis** is where the work lives.
+Product Builder is the method. **Praxis** is where the work lives — every command saves its output to Praxis first (team-visible, versioned) and keeps a local `.product/` mirror. `/pm:new` also writes an `AGENTS.md` so every coding agent in the repo knows tasks, backlog and decisions live in Praxis.
 
 Praxis is Prisma's MCP server (`https://mcp.getprisma.lat/mcp`): a shared, multiplayer memory for your product — ICEDG-scored backlog, committed bets with kill criteria and review dates, tasks with owners, versioned deliverables (vision, ICP, PRDs, designs) and team decisions. Any agent connected to it — Claude Code, Cursor, Gemini CLI, claude.ai — reads and writes the same context, across sessions, machines and teammates.
 

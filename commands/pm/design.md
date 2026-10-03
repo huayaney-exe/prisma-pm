@@ -8,6 +8,10 @@ allowed-tools:
   - Bash
   - Agent
   - AskUserQuestion
+  - mcp__praxis
+  - mcp__prisma
+  - mcp__claude_ai_prisma
+  - mcp__plugin_pm_praxis
 ---
 <context>
 Write Design Specifications that bridge the PRD (what to build) and requirements (how to build it). Covers the FEEL layer — how the product should look, feel, and communicate.
@@ -27,6 +31,7 @@ Write Design Specifications that bridge the PRD (what to build) and requirements
 @prisma-pm/references/ui-brand.md
 @prisma-pm/agents/design-critic.md
 @prisma-pm/templates/design-spec.md
+@prisma-pm/references/praxis.md
 </execution_context>
 
 <process>

@@ -8,6 +8,10 @@ allowed-tools:
   - Bash
   - Agent
   - AskUserQuestion
+  - mcp__praxis
+  - mcp__prisma
+  - mcp__claude_ai_prisma
+  - mcp__plugin_pm_praxis
 ---
 <context>
 Initialize a new product management workspace. Entry point for all Prisma PM work.
@@ -18,6 +22,8 @@ Initialize a new product management workspace. Entry point for all Prisma PM wor
 - `.product/STATE.md` — Product state tracker
 - `.product/config.json` — Prisma PM preferences
 - Directory structure: `PERSONAS/`, `DISCOVERY/`, `DEFINITIONS/`, `SPRINTS/`, `LAUNCHES/`, `METRICS/`, `RETROS/`
+- `AGENTS.md` — tells every coding agent where tasks, backlog and decisions live (Praxis, or `.product/`)
+- **Praxis** (when connected): the product + its vision artifact, visible to the team
 
 **After this command:** Run `/pm:icp` to define your Ideal Customer Profile.
 </context>
@@ -28,6 +34,7 @@ Initialize a new product management workspace. Entry point for all Prisma PM wor
 @prisma-pm/skill/rules/philosophy.md
 @prisma-pm/references/ui-brand.md
 @prisma-pm/templates/product-vision.md
+@prisma-pm/references/praxis.md
 </execution_context>
 
 <process>

@@ -7,6 +7,10 @@ allowed-tools:
   - Write
   - Bash
   - Agent
+  - mcp__praxis
+  - mcp__prisma
+  - mcp__claude_ai_prisma
+  - mcp__plugin_pm_praxis
 ---
 <context>
 Generate realistic synthetic personas from ICP and discovery data. JTBD-based, not demographic fiction.
@@ -27,6 +31,7 @@ Generate realistic synthetic personas from ICP and discovery data. JTBD-based, n
 @prisma-pm/references/ui-brand.md
 @prisma-pm/agents/persona-architect.md
 @prisma-pm/templates/persona-profile.md
+@prisma-pm/references/praxis.md
 </execution_context>
 
 <process>

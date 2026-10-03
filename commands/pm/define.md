@@ -8,6 +8,10 @@ allowed-tools:
   - Bash
   - Agent
   - AskUserQuestion
+  - mcp__praxis
+  - mcp__prisma
+  - mcp__claude_ai_prisma
+  - mcp__plugin_pm_praxis
 ---
 <context>
 Write PRDs that pass the Context Sufficiency Test for AI-assisted implementation.
@@ -28,6 +32,7 @@ Write PRDs that pass the Context Sufficiency Test for AI-assisted implementation
 @prisma-pm/templates/prd-lean.md
 @prisma-pm/templates/prd-full.md
 @prisma-pm/templates/one-pager.md
+@prisma-pm/references/praxis.md
 </execution_context>
 
 <process>

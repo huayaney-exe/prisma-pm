@@ -4,6 +4,10 @@ description: Prisma PM command reference, project state, and getting started gui
 allowed-tools:
   - Read
   - Bash
+  - mcp__praxis
+  - mcp__prisma
+  - mcp__claude_ai_prisma
+  - mcp__plugin_pm_praxis
 ---
 
 <context>
@@ -21,6 +25,7 @@ for DIR in ".claude" ".gemini" ".codex" ".config/opencode" ".opencode"; do
   TOOLS="$HOME/$DIR/skills/prisma-pm/bin/pm-tools.cjs"
   if [ -f "$TOOLS" ]; then
     node "$TOOLS" init help "" --include state,config 2>/dev/null
+    node "$TOOLS" praxis status 2>/dev/null
     break
   fi
 done
@@ -50,6 +55,7 @@ DEFINITION & DESIGN (run per feature)
   /pm:require            PRD → User stories + acceptance criteria → Engineering handoff
 
 UTILITY
+  /pm:praxis             Connect Praxis + upload everything in .product/
   /pm:help               This reference
   /pm:update             Check for and install latest version
 ```
@@ -67,6 +73,7 @@ PROJECT STATE
   Product: {name}
   Phase: {current phase}
   Initiatives: {count} active
+  Praxis: {✓ linked to <workspace_name> | ○ not connected — /pm:praxis}
 
   ACTIVE INITIATIVES
   | Initiative | Stage | Power Score |

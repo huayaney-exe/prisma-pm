@@ -7,6 +7,10 @@ allowed-tools:
   - Bash
   - Agent
   - AskUserQuestion
+  - mcp__praxis
+  - mcp__prisma
+  - mcp__claude_ai_prisma
+  - mcp__plugin_pm_praxis
 ---
 <context>
 Define the Ideal Customer Profile for the product. Feeds all downstream work — discovery, personas, messaging, and GTM.
@@ -23,6 +27,7 @@ Define the Ideal Customer Profile for the product. Feeds all downstream work —
 @prisma-pm/skill/rules/philosophy.md
 @prisma-pm/references/ui-brand.md
 @prisma-pm/templates/icp-profile.md
+@prisma-pm/references/praxis.md
 </execution_context>
 
 <process>

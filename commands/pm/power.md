@@ -7,6 +7,10 @@ allowed-tools:
   - Write
   - Bash
   - AskUserQuestion
+  - mcp__praxis
+  - mcp__prisma
+  - mcp__claude_ai_prisma
+  - mcp__plugin_pm_praxis
 ---
 
 <context>
@@ -78,6 +82,10 @@ Rate the frequency and explain why."
 - **Medium (100-400)**: Viable product. Needs strong execution and clear differentiation to win.
 - **High (400-700)**: Strong product opportunity. Clear willingness to pay. Prioritize this.
 - **Exceptional (700+)**: Category-defining opportunity. Build this immediately.
+
+## If Praxis tools are available (`pm_get_state` — see `~/.claude/skills/prisma-pm/references/praxis.md`):
+
+Follow the `/pm:power` row of `praxis.md` §3: a matching work item gets a `pm_add_learning(kind: "insight")` with the score; scoring the whole product updates `pm_update_product(power_score: round(score / 10), power_tier)`. Standalone use with no workspace: no write, and no nudge.
 
 ## If `.product/` exists:
 

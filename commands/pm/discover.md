@@ -8,6 +8,10 @@ allowed-tools:
   - Bash
   - Agent
   - AskUserQuestion
+  - mcp__praxis
+  - mcp__prisma
+  - mcp__claude_ai_prisma
+  - mcp__plugin_pm_praxis
 ---
 <context>
 Explore a problem space through Socratic questioning and multi-agent analysis. Core PM discovery workflow.
@@ -30,6 +34,7 @@ Explore a problem space through Socratic questioning and multi-agent analysis. C
 @prisma-pm/frameworks/jtbd.md
 @prisma-pm/frameworks/product-power-formula.md
 @prisma-pm/templates/discovery-brief.md
+@prisma-pm/references/praxis.md
 </execution_context>
 
 <process>

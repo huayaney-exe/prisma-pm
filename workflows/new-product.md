@@ -22,6 +22,9 @@ The same applies if YOU include a freeform-indicating option (like "Let me expla
 
 ## 1. Setup
 
+**Praxis preflight:** follow `@prisma-pm/references/praxis.md` §1 now — decide the mode (PRAXIS / LOCAL / CHAT) and, if linked, pull teammates' changes before any user interaction.
+
+
 **MANDATORY FIRST STEP — Execute before ANY user interaction:**
 
 ```bash
@@ -282,13 +285,38 @@ Use AskUserQuestion:
 
 If "Needs changes": switch to plain text and ask what they want to adjust. Update PRODUCT.md accordingly. Then present this review gate again. Loop until approved (max 3 iterations).
 
-## 7. Update State
+## 7. Persist — Praxis first, then local state
+
+### Praxis (PRAXIS mode)
+
+`/pm:new` is silent about Praxis: no pitch, no question — except the single product-match question from `praxis.md` §1.
+
+1. `pm_create_product` — `name`, `role: "owner"`, `visibility: "team"`, `transformation: {"<From, verbatim>": "<To, verbatim>"}`, `power_score: round(score / 10)`, `power_tier: "<tier>"`, `idempotency_key: "pb:product:<slug>"`.
+2. Link it: `node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis link --workspace "<workspace_id>" --product "<product_id>" --workspace-name "<workspace_name>"` (workspace from `pm_get_state`).
+3. `pm_save_artifact` — `kind: "vision"`, `slug: "vision"`, `title: "{Product Name} — Vision"`, `markdown`: the full PRODUCT.md, `visibility: "team"`, frontmatter per `praxis.md` §2.
+4. `praxis record vision <artifact_id> --version 1`.
+
+On any error: follow the fallback table in `praxis.md` §1 and queue `vision` (§5).
+
+### Agent instructions — AGENTS.md (every mode)
+
+Write AGENTS.md so every coding agent that opens this repo (Claude Code, Codex, Cursor, Copilot, Gemini, OpenCode) knows where the product's tasks, backlog and decisions live:
+
+```bash
+node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs agents-md --product-name "{Product Name}" --transformation "{From} → {To}"
+```
+
+It creates AGENTS.md (or updates only its `praxis` block if the file exists) and, when a CLAUDE.md would make Claude Code skip AGENTS.md, adds a single `@AGENTS.md` import line. Mention what it did in the Done block (one line).
+
+### Local state
 
 ```bash
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state add-learning "Product initialized: {Product Name} — Power Score: {score} ({tier})"
 ```
 
 ## 8. Done
+
+Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -327,6 +355,8 @@ Transformation: {from} → {to}
 - `.product/STATE.md` — State tracker with initialization entry
 - `.product/config.json` — Default preferences
 - Directory structure: `PERSONAS/`, `DISCOVERY/`, `DEFINITIONS/`, `SPRINTS/`, `LAUNCHES/`, `METRICS/`, `RETROS/`
+- `AGENTS.md` — Praxis block (or local block), plus a `@AGENTS.md` import in CLAUDE.md when needed
+- **Praxis** (PRAXIS mode): product + `vision` artifact (team visibility), linked in `.product/praxis.json`
 
 </output>
 
@@ -342,6 +372,8 @@ Transformation: {from} → {to}
 - [ ] Review checkpoint: user approved via AskUserQuestion
 - [ ] STATE.md updated with initialization entry
 - [ ] Next-up block displayed with `/pm:icp` suggestion
+
+- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
 
 </success_criteria>
 </content>

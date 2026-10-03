@@ -8,6 +8,10 @@ allowed-tools:
   - Bash
   - Agent
   - AskUserQuestion
+  - mcp__praxis
+  - mcp__prisma
+  - mcp__claude_ai_prisma
+  - mcp__plugin_pm_praxis
 ---
 <context>
 Design fast validation experiments with clear kill criteria. Prevents the "build-first-validate-later" anti-pattern.
@@ -27,6 +31,7 @@ Design fast validation experiments with clear kill criteria. Prevents the "build
 @prisma-pm/agents/experiment-designer.md
 @prisma-pm/templates/experiment-brief.md
 @prisma-pm/templates/hypothesis-card.md
+@prisma-pm/references/praxis.md
 </execution_context>
 
 <process>

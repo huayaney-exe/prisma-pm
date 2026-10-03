@@ -25,6 +25,9 @@ If a user selects "Other" and their response signals freeform intent, you MUST:
 
 ## 1. Setup
 
+**Praxis preflight:** follow `@prisma-pm/references/praxis.md` §1 now — decide the mode (PRAXIS / LOCAL / CHAT) and, if linked, pull teammates' changes before any user interaction.
+
+
 **MANDATORY FIRST STEP:**
 
 ```bash
@@ -348,13 +351,25 @@ Use AskUserQuestion:
 
 If "Needs changes": update PRD based on feedback. Loop until approved (max 3 iterations).
 
-## 9. Update State
+## 9. Persist — Praxis first, then local state
+
+### Praxis (PRAXIS mode)
+
+1. Ensure the work item exists (`praxis.md` §2, *Missing work item*).
+2. `pm_save_artifact(kind: "prd", slug: "{slug}", work_item_id, markdown: <PRD>, frontmatter + {"format": "<lean|full|one-pager>"})` (or `pm_update_artifact` with `bump_version: true`) → `praxis record prd/{slug} <id> --work-item <work_item_id> --version <n>`.
+3. If `praxis get discovery/{slug}` has a record: `pm_link_artifacts(source_id: <prd_id>, target_id: <discovery_id>, relation: "derived_from")`.
+
+The PRD is the engineering handoff: it is saved with `visibility: "team"` so engineers' agents read it through Praxis. On error: fallback + queue `prd/{slug}`.
+
+### Local state
 
 ```bash
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state advance-initiative "{slug}" --to defining
 ```
 
 ## 10. Done
+
+Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -406,5 +421,7 @@ Acceptance Criteria: {count}
 - [ ] Checkpoint: user reviewed and approved via AskUserQuestion
 - [ ] Initiative stage advanced to "defining"
 - [ ] Next-up block displayed with `/pm:require` suggestion
+
+- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
 
 </success_criteria>

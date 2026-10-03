@@ -17,11 +17,22 @@
  *   node pm-tools.cjs state validate-workspace
  *   node pm-tools.cjs file list-discoveries
  *   node pm-tools.cjs file list-definitions
+ *   node pm-tools.cjs praxis status
+ *   node pm-tools.cjs praxis link --workspace <id> --product <id> [--workspace-name <name>]
+ *   node pm-tools.cjs praxis record <key> <id> [--work-item <id>] [--version N]
+ *   node pm-tools.cjs praxis get <key>
+ *   node pm-tools.cjs praxis cursor <cursor>
+ *   node pm-tools.cjs praxis queue add|clear <key> | queue list
+ *   node pm-tools.cjs praxis unsynced
+ *   node pm-tools.cjs praxis nudge on|off
+ *   node pm-tools.cjs agents-md --product-name <name> [--transformation "<from> → <to>"]
  */
 
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const crypto = require('crypto');
+const { execFileSync } = require('child_process');
 
 const PRODUCT_DIR = '.product';
 
@@ -320,6 +331,8 @@ function init(command, slug, includes) {
     result.requirements_content = safeReadFile(path.join(productDir, 'DEFINITIONS', `${slug}-REQUIREMENTS.md`));
   }
 
+  result.praxis = praxisSummary(productDir);
+
   // Check for update cache (scan runtimes)
   const cacheFile = findUpdateCache();
   try {
@@ -512,6 +525,325 @@ function stateValidateWorkspace() {
   });
 }
 
+
+// ── Praxis link (product memory MCP) ─────────────────
+// .product/praxis.json maps local artifacts to Praxis ids so re-runs
+// version the same artifact instead of duplicating it.
+
+const PRAXIS_FILE = 'praxis.json';
+
+function emptyPraxis() {
+  return {
+    workspace_id: null,
+    workspace_name: null,
+    product_id: null,
+    linked_at: null,
+    cursor: null,
+    nudge: true,
+    team_notice_shown: false,
+    records: {},
+    queue: [],
+  };
+}
+
+function readPraxis(productDir) {
+  const raw = safeReadFile(path.join(productDir, PRAXIS_FILE));
+  if (!raw) return emptyPraxis();
+  try {
+    return { ...emptyPraxis(), ...JSON.parse(raw) };
+  } catch (e) {
+    return emptyPraxis();
+  }
+}
+
+function writePraxis(productDir, data) {
+  safeWriteFile(path.join(productDir, PRAXIS_FILE), JSON.stringify(data, null, 2) + '\n');
+}
+
+function contentHash(filePath) {
+  const content = safeReadFile(filePath);
+  return content === null ? null : crypto.createHash('sha256').update(content).digest('hex').slice(0, 16);
+}
+
+// Every local artifact that has a Praxis counterpart, keyed "<kind>/<slug>"
+// (product-level kinds use the bare kind: "vision", "icp").
+function localArtifacts(productDir) {
+  const out = [];
+  const add = (key, kind, slug, rel) => {
+    if (fs.existsSync(path.join(productDir, rel))) out.push({ key, kind, slug, file: rel });
+  };
+  add('vision', 'vision', 'vision', 'PRODUCT.md');
+  add('icp', 'icp', 'icp', 'ICP.md');
+
+  const listDir = (dir, suffix) => {
+    const full = path.join(productDir, dir);
+    if (!fs.existsSync(full)) return [];
+    return fs.readdirSync(full).filter(f => f.endsWith(suffix)).map(f => f.slice(0, -suffix.length));
+  };
+  for (const slug of listDir('PERSONAS', '-PERSONA.md')) add(`persona/${slug}`, 'persona', slug, `PERSONAS/${slug}-PERSONA.md`);
+  for (const slug of listDir('DISCOVERY', '-BRIEF.md')) add(`discovery/${slug}`, 'discovery', slug, `DISCOVERY/${slug}-BRIEF.md`);
+  for (const slug of listDir('DISCOVERY', '-VALIDATION.md')) add(`hypothesis/${slug}`, 'hypothesis', slug, `DISCOVERY/${slug}-VALIDATION.md`);
+  for (const slug of listDir('DEFINITIONS', '-PRD.md')) add(`prd/${slug}`, 'prd', slug, `DEFINITIONS/${slug}-PRD.md`);
+  for (const slug of listDir('DEFINITIONS', '-DESIGN.md')) add(`design/${slug}`, 'design', slug, `DEFINITIONS/${slug}-DESIGN.md`);
+  for (const slug of listDir('DEFINITIONS', '-REQUIREMENTS.md')) add(`requirements/${slug}`, 'requirements', slug, `DEFINITIONS/${slug}-REQUIREMENTS.md`);
+  return out;
+}
+
+function unsyncedArtifacts(productDir, praxis) {
+  return localArtifacts(productDir)
+    .map(a => {
+      const rec = praxis.records[a.key];
+      const hash = contentHash(path.join(productDir, a.file));
+      const status = !rec ? 'new' : (rec.hash !== hash ? 'modified' : 'synced');
+      return { ...a, status, id: rec ? rec.id : null };
+    })
+    .filter(a => a.status !== 'synced');
+}
+
+function praxisSummary(productDir) {
+  const praxis = readPraxis(productDir);
+  const unsynced = unsyncedArtifacts(productDir, praxis);
+  return {
+    linked: Boolean(praxis.product_id),
+    workspace_id: praxis.workspace_id,
+    workspace_name: praxis.workspace_name,
+    product_id: praxis.product_id,
+    cursor: praxis.cursor,
+    nudge: praxis.nudge,
+    team_notice_shown: praxis.team_notice_shown,
+    records_count: Object.keys(praxis.records).length,
+    queue: praxis.queue,
+    unsynced_count: unsynced.length,
+  };
+}
+
+function praxisStatus() {
+  const productDir = findProductDir();
+  if (!productDir) {
+    outputJSON({ workspace: false, linked: false });
+    return;
+  }
+  const praxis = readPraxis(productDir);
+  outputJSON({
+    workspace: true,
+    ...praxisSummary(productDir),
+    unsynced: unsyncedArtifacts(productDir, praxis),
+  });
+}
+
+function praxisLink(workspaceId, productId, workspaceName) {
+  const productDir = requireProductDir();
+  if (!productId) {
+    outputError('praxis link requires --product <id>', 'ERR_MISSING_ARG');
+    process.exit(1);
+  }
+  const praxis = readPraxis(productDir);
+  praxis.workspace_id = workspaceId || praxis.workspace_id;
+  praxis.workspace_name = workspaceName || praxis.workspace_name;
+  praxis.product_id = productId;
+  praxis.linked_at = timestamp();
+  writePraxis(productDir, praxis);
+  outputJSON({ action: 'praxis-link', workspace_id: praxis.workspace_id, product_id: productId });
+}
+
+function praxisRecord(key, id, workItemId, version) {
+  const productDir = requireProductDir();
+  if (!key || !id) {
+    outputError('praxis record requires <key> <id>', 'ERR_MISSING_ARG');
+    process.exit(1);
+  }
+  const praxis = readPraxis(productDir);
+  const local = localArtifacts(productDir).find(a => a.key === key);
+  praxis.records[key] = {
+    id,
+    work_item_id: workItemId || (praxis.records[key] && praxis.records[key].work_item_id) || null,
+    version: version ? parseInt(version, 10) : null,
+    file: local ? local.file : null,
+    hash: local ? contentHash(path.join(productDir, local.file)) : null,
+    synced_at: timestamp(),
+  };
+  praxis.queue = praxis.queue.filter(q => q.key !== key);
+  writePraxis(productDir, praxis);
+  outputJSON({ action: 'praxis-record', key, ...praxis.records[key] });
+}
+
+function praxisGet(key) {
+  const productDir = requireProductDir();
+  const praxis = readPraxis(productDir);
+  outputJSON({ key, record: praxis.records[key] || null });
+}
+
+function praxisCursor(cursor) {
+  const productDir = requireProductDir();
+  const praxis = readPraxis(productDir);
+  praxis.cursor = cursor || null;
+  writePraxis(productDir, praxis);
+  outputJSON({ action: 'praxis-cursor', cursor: praxis.cursor });
+}
+
+function praxisQueue(action, key, reason) {
+  const productDir = requireProductDir();
+  const praxis = readPraxis(productDir);
+  if (action === 'add') {
+    if (!praxis.queue.some(q => q.key === key)) praxis.queue.push({ key, reason: reason || null, queued_at: timestamp() });
+    writePraxis(productDir, praxis);
+  } else if (action === 'clear') {
+    praxis.queue = key ? praxis.queue.filter(q => q.key !== key) : [];
+    writePraxis(productDir, praxis);
+  }
+  outputJSON({ queue: praxis.queue });
+}
+
+function praxisSet(field, value) {
+  const productDir = requireProductDir();
+  const praxis = readPraxis(productDir);
+  praxis[field] = value;
+  writePraxis(productDir, praxis);
+  outputJSON({ action: `praxis-${field}`, [field]: value });
+}
+
+// ── AGENTS.md (cross-agent project instructions) ─────
+// Claude Code reads AGENTS.md natively (v2.1.277+) only when no CLAUDE.md
+// counts for the working directory; otherwise CLAUDE.md must import it.
+
+const AGENTS_START = '<!-- praxis:start -->';
+const AGENTS_END = '<!-- praxis:end -->';
+
+function agentsBlock(praxis) {
+  if (praxis.product_id) {
+    return `${AGENTS_START}
+## Product memory: Praxis
+
+This product is managed in **Praxis** — Prisma's multiplayer product-memory MCP server
+(\`https://mcp.getprisma.lat/mcp\`). The team's ICEDG-scored backlog, committed bets with
+kill criteria and review dates, tasks with owners, versioned deliverables (vision, ICP,
+PRDs, designs, requirements) and decisions live there. Praxis is the source of truth;
+\`.product/\` is a local mirror.
+
+- Product: \`${praxis.product_id}\`${praxis.workspace_id ? ` · Workspace: \`${praxis.workspace_id}\`` : ''}
+- Start every session with \`pm_get_state\`, then \`pm_get_changes\` to see what teammates changed.
+- Task with an owner and a date → \`pm_add_task\` (assignees: \`pm_list_members\`)
+- Idea or bet for the backlog → \`pm_add_work_item\`; commit it with \`pm_commit_work_item\`
+- Decision, insight or blocker → \`pm_add_learning\`
+- PRD, discovery, design, requirements → \`pm_save_artifact\` (visibility: team)
+
+No Praxis tools in your session? Read \`.product/\` instead, and connect Praxis with
+\`npx product-builder@latest --praxis\`. It's always the better path: the context survives
+sessions, machines and agents, and the whole team sees it.
+${AGENTS_END}`;
+  }
+  return `${AGENTS_START}
+## Product memory
+
+This product's context lives in \`.product/\` (see below) — read it before product work.
+Tasks, backlog and decisions are designed to live in **Praxis**, Prisma's multiplayer
+product-memory MCP server (\`https://mcp.getprisma.lat/mcp\`). If Praxis tools
+(\`pm_get_state\`, \`pm_add_task\`, \`pm_add_work_item\`…) are available in your session,
+use them; to connect Praxis: \`npx product-builder@latest --praxis\`.
+${AGENTS_END}`;
+}
+
+const AGENTS_FILES_SECTION = `## Product files (\`.product/\`)
+
+- \`PRODUCT.md\` — vision, transformation thesis, Product Power score
+- \`ICP.md\` — ideal customer profile and disqualification criteria
+- \`PERSONAS/\` — synthetic personas
+- \`DISCOVERY/\` — discovery briefs and validation plans
+- \`DEFINITIONS/\` — PRDs, design specs, requirements
+- \`BACKLOG.md\`, \`STATE.md\` — local backlog and state
+`;
+
+function claudeVersionBelow(minimum) {
+  try {
+    const out = execFileSync('claude', ['--version'], { encoding: 'utf-8', timeout: 4000, stdio: ['ignore', 'pipe', 'ignore'] });
+    const m = out.match(/(\d+)\.(\d+)\.(\d+)/);
+    if (!m) return false;
+    const [a, b, c] = m.slice(1).map(Number);
+    const [x, y, z] = minimum;
+    return a < x || (a === x && (b < y || (b === y && c < z)));
+  } catch (e) {
+    return false; // claude not installed → nothing to adapt for
+  }
+}
+
+// CLAUDE.md files that make Claude Code skip AGENTS.md: in the project
+// root or any directory above it — except the user's ~/.claude/CLAUDE.md.
+function findCountingClaudeMd(root) {
+  const userMemory = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+  const found = { root: null, above: null };
+  for (const name of ['CLAUDE.md', path.join('.claude', 'CLAUDE.md'), 'CLAUDE.local.md']) {
+    const candidate = path.join(root, name);
+    if (fs.existsSync(candidate)) { found.root = candidate; break; }
+  }
+  let dir = path.dirname(root);
+  while (dir !== path.dirname(dir) && !found.above) {
+    for (const name of ['CLAUDE.md', path.join('.claude', 'CLAUDE.md'), 'CLAUDE.local.md']) {
+      const candidate = path.join(dir, name);
+      if (candidate !== userMemory && fs.existsSync(candidate)) { found.above = candidate; break; }
+    }
+    dir = path.dirname(dir);
+  }
+  return found;
+}
+
+function writeAgentsMd(productName, transformation) {
+  const productDir = requireProductDir();
+  const root = path.dirname(productDir);
+  const praxis = readPraxis(productDir);
+  const block = agentsBlock(praxis);
+  const agentsPath = path.join(root, 'AGENTS.md');
+
+  let agentsAction;
+  const existing = safeReadFile(agentsPath);
+  if (existing === null) {
+    const header = `# ${productName || 'Product'}\n\n${transformation ? `${transformation}\n\n` : ''}`;
+    safeWriteFile(agentsPath, `${header}${block}\n\n${AGENTS_FILES_SECTION}`);
+    agentsAction = 'created';
+  } else if (existing.includes(AGENTS_START) && existing.includes(AGENTS_END)) {
+    const start = existing.indexOf(AGENTS_START);
+    const end = existing.indexOf(AGENTS_END) + AGENTS_END.length;
+    safeWriteFile(agentsPath, existing.slice(0, start) + block + existing.slice(end));
+    agentsAction = 'updated';
+  } else {
+    safeWriteFile(agentsPath, `${existing.replace(/\s*$/, '')}\n\n${block}\n`);
+    agentsAction = 'appended';
+  }
+
+  // Make sure Claude Code loads it
+  let claudeAction = 'none';
+  const counting = findCountingClaudeMd(root);
+  const rootClaude = path.join(root, 'CLAUDE.md');
+  const importLine = '@AGENTS.md';
+  const hasImport = (file) => (safeReadFile(file) || '').split('\n').some(l => l.trim() === importLine);
+
+  if (counting.root && counting.root.endsWith('CLAUDE.local.md') && !fs.existsSync(rootClaude)) {
+    safeWriteFile(rootClaude, `${importLine}\n`);
+    claudeAction = 'created';
+  } else if (counting.root && !counting.root.endsWith('CLAUDE.local.md')) {
+    if (!hasImport(counting.root)) {
+      const current = safeReadFile(counting.root) || '';
+      safeWriteFile(counting.root, `${current.replace(/\s*$/, '')}\n\n${importLine}\n`);
+      claudeAction = 'appended';
+    }
+  } else if (counting.above || claudeVersionBelow([2, 1, 277])) {
+    if (!fs.existsSync(rootClaude)) {
+      safeWriteFile(rootClaude, `${importLine}\n`);
+      claudeAction = 'created';
+    } else if (!hasImport(rootClaude)) {
+      safeWriteFile(rootClaude, `${(safeReadFile(rootClaude) || '').replace(/\s*$/, '')}\n\n${importLine}\n`);
+      claudeAction = 'appended';
+    }
+  }
+
+  outputJSON({
+    agents_md: agentsAction,
+    agents_path: agentsPath,
+    mode: praxis.product_id ? 'praxis' : 'local',
+    claude_md: claudeAction,
+    claude_md_path: claudeAction === 'none' ? null : (counting.root && !counting.root.endsWith('CLAUDE.local.md') ? counting.root : rootClaude),
+  });
+}
+
 // ── File Operations ───────────────────────────────────
 
 function listDiscoveries(productDir) {
@@ -670,8 +1002,56 @@ switch (command) {
     break;
   }
 
+  case 'praxis': {
+    const [action, ...actionArgs] = rest;
+    switch (action) {
+      case 'status':
+        praxisStatus();
+        break;
+      case 'link':
+        praxisLink(getFlag(actionArgs, '--workspace'), getFlag(actionArgs, '--product'), getFlag(actionArgs, '--workspace-name'));
+        break;
+      case 'record': {
+        const [key, id] = getNonFlagArgs(actionArgs);
+        praxisRecord(key, id, getFlag(actionArgs, '--work-item'), getFlag(actionArgs, '--version'));
+        break;
+      }
+      case 'get':
+        praxisGet(actionArgs[0]);
+        break;
+      case 'cursor':
+        praxisCursor(actionArgs[0]);
+        break;
+      case 'queue': {
+        const [queueAction, key] = getNonFlagArgs(actionArgs);
+        praxisQueue(queueAction || 'list', key, getFlag(actionArgs, '--reason'));
+        break;
+      }
+      case 'unsynced': {
+        const productDir = requireProductDir();
+        outputJSON(unsyncedArtifacts(productDir, readPraxis(productDir)));
+        break;
+      }
+      case 'nudge':
+        praxisSet('nudge', actionArgs[0] !== 'off');
+        break;
+      case 'team-notice-shown':
+        praxisSet('team_notice_shown', true);
+        break;
+      default:
+        outputError(`Unknown praxis action: ${action}`, 'ERR_UNKNOWN_ACTION');
+        process.exit(1);
+    }
+    break;
+  }
+
+  case 'agents-md': {
+    writeAgentsMd(getFlag(rest, '--product-name'), getFlag(rest, '--transformation'));
+    break;
+  }
+
   default:
     outputError(`Unknown command: ${command}`, 'ERR_UNKNOWN_COMMAND');
-    console.error('Usage: pm-tools <scaffold|init|state|file> [args]');
+    console.error('Usage: pm-tools <scaffold|init|state|file|praxis|agents-md> [args]');
     process.exit(1);
 }
