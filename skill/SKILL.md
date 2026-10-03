@@ -3,7 +3,7 @@ name: prisma-pm
 description: Context-resilient system for transformation-driven product building
 metadata:
   author: Luis Huayaney
-  version: 0.4.3
+  version: 0.4.4
   tags: product-management, discovery, strategy, prd, jtbd, rice, validation, context-engineering, icp, personas
 ---
 

@@ -12,15 +12,29 @@ const MANIFEST_NAME = 'prisma-pm-manifest.json';
 const VERSION = require('../package.json').version;
 
 // ── ANSI Colors ───────────────────────────────────────
-const c = {
-  reset: '\x1b[0m',
-  bold: '\x1b[1m',
-  dim: '\x1b[2m',
-  cyan: '\x1b[36m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  red: '\x1b[31m',
-};
+// Never 24-bit: COLORTERM can claim truecolor when the outer terminal
+// lacks it (e.g. tmux forwarding to macOS Terminal.app before macOS 26),
+// and 38;2 sequences then render as garbage. 256 colors work everywhere
+// that matters; 16 colors otherwise; none for pipes, NO_COLOR, TERM=dumb.
+function detectColorDepth() {
+  const term = process.env.TERM || '';
+  if (process.env.NO_COLOR || !process.stdout.isTTY || term === 'dumb') return 0;
+  if (/256/.test(term) || process.env.COLORTERM || process.platform === 'win32') return 8;
+  return 4;
+}
+const COLOR_DEPTH = detectColorDepth();
+
+const c = COLOR_DEPTH === 0
+  ? { reset: '', bold: '', dim: '', cyan: '', green: '', yellow: '', red: '' }
+  : {
+    reset: '\x1b[0m',
+    bold: '\x1b[1m',
+    dim: '\x1b[2m',
+    cyan: '\x1b[36m',
+    green: '\x1b[32m',
+    yellow: '\x1b[33m',
+    red: '\x1b[31m',
+  };
 
 function log(msg) { console.log(msg); }
 function logGreen(msg) { log(`${c.green}${msg}${c.reset}`); }
@@ -771,8 +785,39 @@ async function connectPraxis(installs) {
 }
 
 // ── True-Color Gradient ──────────────────────────────
+function toAnsi256(r, g, b) {
+  if (r === g && g === b) {
+    if (r < 8) return 16;
+    if (r > 248) return 231;
+    return 232 + Math.round(((r - 8) / 247) * 24);
+  }
+  const q = (v) => Math.round((v / 255) * 5);
+  return 16 + 36 * q(r) + 6 * q(g) + q(b);
+}
+
+// Bright cyan / blue / magenta — closest 16-color stand-ins for the gradient
+const ANSI16 = [
+  [96, [0, 255, 255]],
+  [94, [92, 92, 255]],
+  [95, [255, 85, 255]],
+  [97, [255, 255, 255]],
+];
+
+function toAnsi16(r, g, b) {
+  let best = ANSI16[0];
+  let bestDist = Infinity;
+  for (const entry of ANSI16) {
+    const [er, eg, eb] = entry[1];
+    const dist = (r - er) ** 2 + (g - eg) ** 2 + (b - eb) ** 2;
+    if (dist < bestDist) { best = entry; bestDist = dist; }
+  }
+  return best[0];
+}
+
 function rgb(r, g, b) {
-  return `\x1b[38;2;${r};${g};${b}m`;
+  if (COLOR_DEPTH === 8) return `\x1b[38;5;${toAnsi256(r, g, b)}m`;
+  if (COLOR_DEPTH === 4) return `\x1b[${toAnsi16(r, g, b)}m`;
+  return '';
 }
 
 const GRADIENT_STOPS = [
