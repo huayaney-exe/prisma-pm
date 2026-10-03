@@ -97,6 +97,8 @@ The installer auto-detects your AI CLI and prompts you to choose scope:
 
 Supports **6 runtimes**. Use `--claude`, `--gemini`, `--codex`, `--copilot`, `--cursor`, or `--opencode` to target a specific one, or `--all` to install everywhere.
 
+At the end, the installer offers to connect **[Praxis](#praxis--product-memory)** — Prisma's product-memory MCP — to your CLI. Optional, and nothing is written without your consent.
+
 Verify with:
 ```
 /pm:help
@@ -112,6 +114,8 @@ npx product-builder@latest --gemini    # Target Gemini CLI
 npx product-builder@latest --cursor    # Target Cursor
 npx product-builder@latest --all       # Install to all detected CLIs
 npx product-builder@latest --force     # Overwrite without prompting
+npx product-builder@latest --praxis    # Also connect the Praxis MCP, no prompt
+npx product-builder@latest --no-praxis # Skip the Praxis step
 npx product-builder@latest --uninstall # Remove installed files
 ```
 
@@ -298,6 +302,28 @@ Workflows include `<runtime_compatibility>` blocks with conditional execution pa
 |---------|--------------|
 | `/pm:help` | Full command reference + current project state |
 | `/pm:update` | Check for and install latest version |
+
+---
+
+## Praxis — Product Memory
+
+Product Builder is the method. **Praxis** is where the work lives.
+
+Praxis is Prisma's MCP server (`https://mcp.getprisma.lat/mcp`): a shared, multiplayer memory for your product — ICEDG-scored backlog, committed bets with kill criteria and review dates, tasks with owners, versioned deliverables (vision, ICP, PRDs, designs) and team decisions. Any agent connected to it — Claude Code, Cursor, Gemini CLI, claude.ai — reads and writes the same context, across sessions, machines and teammates.
+
+The installer can register it for you:
+
+| CLI | How it's connected |
+|-----|--------------------|
+| Claude Code | `claude mcp add --transport http --scope user praxis https://mcp.getprisma.lat/mcp`, then `/mcp` → praxis → Authenticate |
+| Cursor | `~/.cursor/mcp.json` |
+| Gemini CLI | `~/.gemini/settings.json`, then `/mcp auth praxis` |
+| OpenCode | `opencode.json` |
+| Codex · Copilot | Printed steps to add the remote MCP server manually |
+
+Already connected Praxis as a claude.ai connector? Skip the step — it's detected by URL, so it's never registered twice.
+
+Praxis is a paid service with a **7-day free trial**. Product Builder works fully without it, using local `.product/` files.
 
 ---
 

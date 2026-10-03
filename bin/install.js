@@ -5,6 +5,7 @@ const path = require('path');
 const readline = require('readline');
 const os = require('os');
 const crypto = require('crypto');
+const praxis = require('./praxis-config.cjs');
 
 const PACKAGE_ROOT = path.join(__dirname, '..');
 const MANIFEST_NAME = 'prisma-pm-manifest.json';
@@ -134,6 +135,9 @@ const flags = {
   force: args.includes('--force'),
   all: args.includes('--all'),
   help: args.includes('--help') || args.includes('-h'),
+  // Praxis MCP registration
+  praxis: args.includes('--praxis'),
+  noPraxis: args.includes('--no-praxis'),
   // Runtime flags
   claude: args.includes('--claude'),
   gemini: args.includes('--gemini'),
@@ -155,6 +159,8 @@ if (flags.help) {
   log('    npx product-builder@latest --all        Install to all detected CLIs');
   log('    npx product-builder@latest --uninstall  Remove installed files');
   log('    npx product-builder@latest --force      Overwrite without prompting');
+  log('    npx product-builder@latest --praxis     Also connect the Praxis MCP (no prompt)');
+  log('    npx product-builder@latest --no-praxis  Skip the Praxis MCP step');
   log('');
   log('  Runtime targets:');
   log('    --claude      Claude Code       (~/.claude/)');
@@ -370,6 +376,7 @@ function convertToolNames(content, runtimeId) {
       .filter(line => line.trim().startsWith('- '))
       .map(line => {
         const tool = line.trim().replace(/^-\s+/, '');
+        if (tool.startsWith('mcp__')) return null; // Claude Code permission syntax only
         const mapped = toolMap.hasOwnProperty(tool) ? toolMap[tool] : tool.toLowerCase();
         return mapped ? `  - ${mapped}` : null;
       })
@@ -515,6 +522,7 @@ function getInstallMap(targetDir) {
     { src: path.join(PACKAGE_ROOT, 'workflows'), dest: path.join(targetDir, 'skills', 'prisma-pm', 'workflows'), label: 'skills/prisma-pm/workflows/' },
     { src: path.join(PACKAGE_ROOT, 'references'), dest: path.join(targetDir, 'skills', 'prisma-pm', 'references'), label: 'skills/prisma-pm/references/' },
     { src: path.join(PACKAGE_ROOT, 'bin', 'pm-tools.cjs'), dest: path.join(targetDir, 'skills', 'prisma-pm', 'bin', 'pm-tools.cjs'), label: 'skills/prisma-pm/bin/pm-tools.cjs', isFile: true },
+    { src: path.join(PACKAGE_ROOT, 'bin', 'praxis-config.cjs'), dest: path.join(targetDir, 'skills', 'prisma-pm', 'bin', 'praxis-config.cjs'), label: 'skills/prisma-pm/bin/praxis-config.cjs', isFile: true },
     { src: path.join(PACKAGE_ROOT, 'VERSION'), dest: path.join(targetDir, 'skills', 'prisma-pm', 'VERSION'), label: 'skills/prisma-pm/VERSION', isFile: true },
   ];
 }
@@ -637,6 +645,9 @@ function uninstall(targetDir, runtime) {
   if (runtime.supportsHooks) removeHooks(targetDir);
 
   log(`  ${c.green}✓${c.reset} Uninstalled v${manifest.version} from ${runtime.name}`);
+  if (praxis.detect(runtime.id, targetDir).configured) {
+    log(`  ${c.dim}Praxis MCP left registered — your product memory is untouched.${c.reset}`);
+  }
 }
 
 // ── Install One Runtime ───────────────────────────────
@@ -697,6 +708,66 @@ function installToRuntime(runtime, targetDir) {
 
   const hookNote = runtime.supportsHooks ? ' + hook' : '';
   log(`  ${c.green}✓${c.reset} ${runtime.name} — ${stats.created} new, ${stats.updated} updated, ${stats.skipped} unchanged${hookNote}`);
+}
+
+// ── Praxis MCP (product memory) ──────────────────────
+function ask(question) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim().toLowerCase());
+    });
+  });
+}
+
+async function connectPraxis(installs) {
+  if (flags.noPraxis) return;
+
+  log('');
+  log(`  ${c.bold}PRAXIS${c.reset} ${c.dim}— product memory by Prisma${c.reset}`);
+
+  const pending = [];
+  for (const { runtime, targetDir } of installs) {
+    const found = praxis.detect(runtime.id, targetDir);
+    if (found.configured) {
+      log(`  ${c.green}✓${c.reset} ${runtime.name} — connected as "${found.name}"`);
+    } else {
+      pending.push({ runtime, targetDir });
+    }
+  }
+  if (pending.length === 0) return;
+
+  log(`  ${c.dim}Every vision, ICP, discovery, PRD and decision gets versioned in Praxis —${c.reset}`);
+  log(`  ${c.dim}readable by any agent, any session, any teammate. Without it, your work${c.reset}`);
+  log(`  ${c.dim}lives only in .product/ on this machine.${c.reset}`);
+  log(`  ${c.dim}Already added Praxis as a claude.ai connector? Answer n — commands detect it at runtime.${c.reset}`);
+  log('');
+
+  let connect = flags.praxis;
+  if (!connect && process.stdin.isTTY) {
+    const answer = await ask(`  Connect Praxis to ${pending.map(p => p.runtime.name).join(', ')}? [${c.bold}Y${c.reset}/n]: `);
+    connect = answer === '' || answer.startsWith('y') || answer.startsWith('s');
+  }
+
+  for (const { runtime, targetDir } of pending) {
+    if (!connect) {
+      log(`  ${c.yellow}○${c.reset} ${runtime.name} — not connected. To connect later:`);
+      for (const step of praxis.manualSteps(runtime.id)) log(`      ${c.cyan}${step}${c.reset}`);
+      continue;
+    }
+    const res = praxis.register(runtime.id, targetDir);
+    if (res.ok) {
+      log(`  ${c.green}✓${c.reset} ${runtime.name} — Praxis registered ${c.dim}(${res.where})${c.reset}`);
+    } else {
+      log(`  ${c.yellow}○${c.reset} ${runtime.name} — ${res.error || 'manual setup needed'}:`);
+    }
+    for (const step of res.next || []) log(`      ${c.cyan}${step}${c.reset}`);
+  }
+
+  if (!connect) {
+    log(`  ${c.dim}Or re-run:${c.reset} ${c.cyan}npx product-builder@latest --praxis${c.reset}`);
+  }
 }
 
 // ── True-Color Gradient ──────────────────────────────
@@ -791,10 +862,14 @@ async function main() {
   }
 
   log('');
+  const installs = [];
   for (const runtime of runtimes) {
     const targetDir = await resolveTarget(runtime);
     installToRuntime(runtime, targetDir);
+    installs.push({ runtime, targetDir });
   }
+
+  await connectPraxis(installs);
 
   // Success banner
   log('');
