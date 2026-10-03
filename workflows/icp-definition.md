@@ -19,6 +19,9 @@ If a user selects "Other" and their response signals they want to describe somet
 
 ## 1. Setup
 
+**Praxis preflight:** follow `@prisma-pm/references/praxis.md` §1 now — decide the mode (PRAXIS / LOCAL / CHAT) and, if linked, pull teammates' changes before any user interaction.
+
+
 **MANDATORY FIRST STEP:**
 
 ```bash
@@ -166,13 +169,21 @@ Use `AskUserQuestion`:
 
 If "Needs changes": update ICP.md accordingly and ask again. Loop until approved (max 3 iterations).
 
-## 7. Update State
+## 7. Persist — Praxis first, then local state
+
+### Praxis (PRAXIS mode)
+
+Save the ICP per `praxis.md` §3: `pm_save_artifact(kind: "icp", slug: "icp", markdown: ICP.md)` — or `pm_update_artifact(bump_version: true)` if `praxis get icp` returns a record. Then `praxis record icp <id> --version <n>`. On error: fallback + queue `icp`.
+
+### Local state
 
 ```bash
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state add-learning "ICP defined: {one-line summary}"
 ```
 
 ## 8. Done
+
+Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -222,6 +233,8 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state add-learning "ICP defined
 - [ ] Checkpoint: user reviewed and approved via AskUserQuestion
 - [ ] STATE.md updated
 - [ ] Next-up block displayed with `/pm:persona` suggestion
+
+- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
 
 </success_criteria>
 </output>

@@ -19,6 +19,9 @@ If a user selects "Other" and their response signals freeform intent (e.g., "let
 
 ## 1. Setup
 
+**Praxis preflight:** follow `@prisma-pm/references/praxis.md` §1 now — decide the mode (PRAXIS / LOCAL / CHAT) and, if linked, pull teammates' changes before any user interaction.
+
+
 **MANDATORY FIRST STEP:**
 
 ```bash
@@ -227,7 +230,21 @@ Use AskUserQuestion:
 **If "Override":** Accept manual ranking but document the override reason.
 **If "Approved":** Proceed to write.
 
-## 8. Update Backlog
+## 8. Update Backlog — Praxis first
+
+### Praxis (PRAXIS mode)
+
+With Praxis linked, **Praxis is the backlog and ICEDG is the official ranking**; RICE + Product Power feed it.
+
+1. For every ranked initiative without a `work_item/{slug}` record: `pm_add_work_item(product_id, title, slug, problem_statement)` → `praxis record work_item/{slug} <id>`.
+2. One `pm_score_work_items` call with the five ICEDG inputs per item, derived as in `praxis.md` §3 (*ICEDG from the method's own scores*), each with its `rationale`. Propose the values and accept corrections; at most one clarifying question per item.
+3. Read the result order with `pm_get_backlog(product_id)` and use **that** order for the table below (add an `ICEDG` column). Never compute the score yourself.
+4. Record the user's force-rank decision: `pm_add_learning(kind: "decision", provenance: "user_stated", text: "Ranked {N} initiatives. Top: {name} — {why}")`.
+
+On error: fall back to the RICE ranking below and queue `work_item/<slug>` for each unscored item.
+
+### Local mirror
+
 
 Rewrite `.product/BACKLOG.md`:
 
@@ -261,6 +278,8 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state add-learning "Strategy: {
 ```
 
 ## 10. Done
+
+Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -311,5 +330,7 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state add-learning "Strategy: {
 - [ ] Low-power and off-strategy initiatives flagged
 - [ ] STATE.md updated
 - [ ] Next-up block displayed with `/pm:define` suggestion
+
+- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
 
 </success_criteria>

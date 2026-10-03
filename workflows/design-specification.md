@@ -25,6 +25,9 @@ If a user selects "Other" and their response signals freeform intent, you MUST:
 
 ## 1. Setup
 
+**Praxis preflight:** follow `@prisma-pm/references/praxis.md` §1 now — decide the mode (PRAXIS / LOCAL / CHAT) and, if linked, pull teammates' changes before any user interaction.
+
+
 **MANDATORY FIRST STEP:**
 
 ```bash
@@ -267,13 +270,25 @@ Use AskUserQuestion:
 
 If "Needs changes": update Design Spec based on feedback. Loop until approved (max 3 iterations).
 
-## 10. Update State
+## 10. Persist — Praxis first, then local state
+
+### Praxis (PRAXIS mode)
+
+1. Ensure the work item exists (`praxis.md` §2, *Missing work item*).
+2. `pm_save_artifact(kind: "design", slug: "{slug}", work_item_id, markdown: <design spec>)` (or `pm_update_artifact`) → `praxis record design/{slug} <id> --work-item <work_item_id> --version <n>`.
+3. If `praxis get prd/{slug}` has a record: `pm_link_artifacts(source_id: <design_id>, target_id: <prd_id>, relation: "addresses")`.
+
+On error: fallback + queue `design/{slug}`.
+
+### Local state
 
 ```bash
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state advance-initiative "{slug}" --to designing
 ```
 
 ## 11. Done
+
+Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -328,5 +343,7 @@ Sections: {count} | User Flows: {count}
 - [ ] Checkpoint: user reviewed and approved via AskUserQuestion
 - [ ] Initiative stage advanced to "designing"
 - [ ] Next-up block displayed with `/pm:require` suggestion
+
+- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
 
 </success_criteria>

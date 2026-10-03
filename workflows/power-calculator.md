@@ -19,6 +19,9 @@ If a user selects "Other" and their response signals freeform intent (e.g., "let
 
 ## 1. Setup
 
+**Praxis preflight:** follow `@prisma-pm/references/praxis.md` §1 now — decide the mode (PRAXIS / LOCAL / CHAT) before any user interaction.
+
+
 **MANDATORY FIRST STEP:**
 
 ```bash
@@ -136,6 +139,11 @@ Provide interpretation based on the score:
 
 ## 6. Optional: Update Initiative
 
+**PRAXIS mode** (`praxis.md` §3, `/pm:power` row): if the problem matches a `work_item/{slug}` record → `pm_add_learning(kind: "insight", work_item_id, text: "Product Power {score} ({tier}): ΔState {x} × Intensity {y} × Frequency {z}")`. If the user scored the whole product → `pm_update_product(product_id, power_score: round(score / 10), power_tier)`. Standalone use with no workspace: no write.
+
+**Local state:**
+
+
 If a product workspace exists and a matching initiative is in the backlog:
 
 ```bash
@@ -143,6 +151,8 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state update-power-score "{slug
 ```
 
 ## 7. Done
+
+Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
 
 ```
 ───────────────────────────────────────────────────────────────
@@ -182,5 +192,7 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state update-power-score "{slug
 - [ ] Tier interpretation provided with strategic guidance
 - [ ] Initiative updated in backlog if applicable
 - [ ] Next-up block displayed
+
+- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
 
 </success_criteria>

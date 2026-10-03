@@ -16,6 +16,9 @@ Read all files referenced by the invoking command's execution_context before sta
 
 ## 1. Setup
 
+**Praxis preflight:** follow `@prisma-pm/references/praxis.md` §1 now — decide the mode (PRAXIS / LOCAL / CHAT) and, if linked, pull teammates' changes before any user interaction.
+
+
 **MANDATORY FIRST STEP:**
 
 ```bash
@@ -220,13 +223,21 @@ If a user selects "Needs changes" and their response signals freeform intent (e.
 
 If changes: regenerate specific personas. Loop until approved (max 3 iterations).
 
-## 8. Update State
+## 8. Persist — Praxis first, then local state
+
+### Praxis (PRAXIS mode)
+
+For each persona file written: `pm_save_artifact(kind: "persona", slug: "<persona-slug>", markdown: <file>)` (or `pm_update_artifact` if `praxis get persona/<slug>` has a record), then `praxis record persona/<slug> <id> --version <n>`. Include the structured fields in `payload` (`{"name", "role", "job", "pain"}`). On error: fallback + queue each `persona/<slug>`.
+
+### Local state
 
 ```bash
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state add-learning "Generated {N} personas: {names}"
 ```
 
 ## 9. Done
+
+Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -281,6 +292,8 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state add-learning "Generated {
 - [ ] Checkpoint: user reviewed and approved
 - [ ] STATE.md updated
 - [ ] Next-up block displayed
+
+- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
 
 </success_criteria>
 </output>

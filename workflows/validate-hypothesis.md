@@ -16,6 +16,9 @@ Read all files referenced by the invoking command's execution_context before sta
 
 ## 1. Setup
 
+**Praxis preflight:** follow `@prisma-pm/references/praxis.md` §1 now — decide the mode (PRAXIS / LOCAL / CHAT) and, if linked, pull teammates' changes before any user interaction.
+
+
 **MANDATORY FIRST STEP:**
 
 ```bash
@@ -244,13 +247,29 @@ created: "{ISO date}"
 - [ ] Decision: advance or pivot
 ```
 
-## 8. Update State
+## 8. Persist — Praxis first, then local state
+
+### Praxis (PRAXIS mode)
+
+1. Ensure the work item exists (`praxis.md` §2, *Missing work item*).
+2. `pm_save_artifact(kind: "hypothesis", slug: "{slug}", work_item_id, markdown: <validation plan>, payload: {"hypotheses": [...], "kill_criteria": [...]})` (or `pm_update_artifact`) → `praxis record hypothesis/{slug} <id> --work-item <work_item_id> --version <n>`.
+3. **Commit rite** — this is a decision, so ask once (AskUserQuestion):
+   - header: "Commit?"
+   - question: "Commit '{initiative}' as a bet? Praxis records the kill criteria and reminds the team on the review date."
+   - options: "Commit the bet" — review on {experiment end date}, killed if {primary kill criterion} · "Not yet" — keep it as a candidate
+   If committed: `pm_commit_work_item(item_id: <work_item_id>, horizon_end: "<ISO-8601 with offset>", kill_criteria: "<primary kill criterion>", outcome: { new_metric: { name, unit, target, horizon_end } })` using the plan's primary success metric. Praxis writes the decision learning itself.
+
+On error: fallback + queue `hypothesis/{slug}`.
+
+### Local state
 
 ```bash
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state advance-initiative "{slug}" --to validating
 ```
 
 ## 9. Done
+
+Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -303,6 +322,8 @@ If success criteria are met → `/pm:define "{slug}"`
 - [ ] Validation plan written with all sections
 - [ ] Initiative stage advanced to "validating"
 - [ ] Next-up block displayed with clear decision guidance
+
+- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
 
 </success_criteria>
 </output>

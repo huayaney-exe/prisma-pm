@@ -382,8 +382,8 @@ function replacePaths(content, runtimeId, dirName, isGlobal) {
 
 // Convert allowed-tools in YAML frontmatter to runtime-specific tool names
 function convertToolNames(content, runtimeId) {
-  const toolMap = TOOL_MAPS[runtimeId];
-  if (!toolMap || Object.keys(toolMap).length === 0) return content;
+  const toolMap = TOOL_MAPS[runtimeId] || {};
+  if (runtimeId === 'claude') return content;
 
   return content.replace(/^(allowed-tools:\n)((?:\s+-\s+.+\n)+)/m, (match, header, tools) => {
     const converted = tools.split('\n')
@@ -391,7 +391,8 @@ function convertToolNames(content, runtimeId) {
       .map(line => {
         const tool = line.trim().replace(/^-\s+/, '');
         if (tool.startsWith('mcp__')) return null; // Claude Code permission syntax only
-        const mapped = toolMap.hasOwnProperty(tool) ? toolMap[tool] : tool.toLowerCase();
+        const hasMap = Object.keys(toolMap).length > 0;
+        const mapped = toolMap.hasOwnProperty(tool) ? toolMap[tool] : (hasMap ? tool.toLowerCase() : tool);
         return mapped ? `  - ${mapped}` : null;
       })
       .filter(Boolean)
@@ -936,6 +937,7 @@ async function main() {
   log(`  ${c.cyan}/pm:define${c.reset} ${c.dim}"feature"${c.reset}  Context-engineered PRD`);
   log(`  ${c.cyan}/pm:design${c.reset}           Design spec — messaging, IA, flows, taste`);
   log(`  ${c.cyan}/pm:require${c.reset}          PRD to user stories + acceptance criteria`);
+  log(`  ${c.cyan}/pm:praxis${c.reset}           Connect Praxis + upload your work`);
   log(`  ${c.cyan}/pm:help${c.reset}             Full command reference`);
   log(`  ${c.cyan}/pm:update${c.reset}           Check for latest version`);
 

@@ -7,6 +7,10 @@ allowed-tools:
   - Bash
   - Agent
   - AskUserQuestion
+  - mcp__praxis
+  - mcp__prisma
+  - mcp__claude_ai_prisma
+  - mcp__plugin_pm_praxis
 ---
 <context>
 Rank all initiatives using RICE + Product Power composite scoring. Force-ranked backlog — no ties allowed.
@@ -25,6 +29,7 @@ Rank all initiatives using RICE + Product Power composite scoring. Force-ranked 
 @prisma-pm/references/ui-brand.md
 @prisma-pm/frameworks/rice.md
 @prisma-pm/frameworks/product-power-formula.md
+@prisma-pm/references/praxis.md
 </execution_context>
 
 <process>

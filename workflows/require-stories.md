@@ -19,6 +19,9 @@ If a user selects "Other" and their response signals freeform intent, you MUST:
 
 ## 1. Setup
 
+**Praxis preflight:** follow `@prisma-pm/references/praxis.md` §1 now — decide the mode (PRAXIS / LOCAL / CHAT) and, if linked, pull teammates' changes before any user interaction.
+
+
 **MANDATORY FIRST STEP:**
 
 ```bash
@@ -214,7 +217,17 @@ Use AskUserQuestion:
 
 If changes: update requirements. Loop until approved (max 3 iterations).
 
-## 8. Update State
+## 8. Persist — Praxis first, then local state
+
+### Praxis (PRAXIS mode)
+
+1. Ensure the work item exists (`praxis.md` §2, *Missing work item*).
+2. `pm_save_artifact(kind: "requirements", slug: "{slug}", work_item_id, markdown: <requirements>, payload: {"epics": N, "stories": M})` (or `pm_update_artifact`) → `praxis record requirements/{slug} <id> --work-item <work_item_id> --version <n>`.
+3. If `praxis get prd/{slug}` has a record: `pm_link_artifacts(source_id: <requirements_id>, target_id: <prd_id>, relation: "derived_from")`.
+
+On error: fallback + queue `requirements/{slug}`.
+
+### Local state
 
 ```bash
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state advance-initiative "{slug}" --to requiring
@@ -222,6 +235,8 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state add-learning "Requirement
 ```
 
 ## 9. Done
+
+Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -273,5 +288,7 @@ Must Have: {count} | Should Have: {count} | Could Have: {count}
 - [ ] Checkpoint: user reviewed and approved
 - [ ] Initiative stage advanced to "requiring"
 - [ ] Next-up block displayed
+
+- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
 
 </success_criteria>

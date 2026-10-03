@@ -10,6 +10,9 @@ Read all files referenced by the invoking command's execution_context before sta
 
 ## 1. Setup
 
+**Praxis preflight:** follow `@prisma-pm/references/praxis.md` §1 now — decide the mode (PRAXIS / LOCAL / CHAT) and, if linked, pull teammates' changes before any user interaction.
+
+
 **MANDATORY FIRST STEP:**
 
 ```bash
@@ -319,13 +322,25 @@ Use `AskUserQuestion`:
 
 If "Needs changes": update brief accordingly and present this checkpoint again. Loop until approved (max 3 iterations).
 
-## 8. Update State
+## 8. Persist — Praxis first, then local state
+
+### Praxis (PRAXIS mode)
+
+1. Work item: if `praxis get work_item/{slug}` has no record → `pm_add_work_item(product_id, title: "{problem title}", slug: "{slug}", problem_statement: <transformation map summary>)` → `praxis record work_item/{slug} <id>`. Leave it unscored unless the user already gave ICEDG-relevant numbers (`/pm:strategy` scores it).
+2. Brief: `pm_save_artifact(kind: "discovery", slug: "{slug}", work_item_id, markdown: <brief>, payload: {"power_score", "power_tier", "assumptions": [...]})` (or `pm_update_artifact`) → `praxis record discovery/{slug} <id> --work-item <work_item_id> --version <n>`.
+3. Top insight: `pm_add_learning(kind: "insight", work_item_id, provenance: "agent_inferred", text: <the single most important finding>)`.
+
+On error: fallback + queue `discovery/{slug}`.
+
+### Local state
 
 ```bash
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state add-initiative "{problem title}" --power-score {score} --stage discovering
 ```
 
 ## 9. Done
+
+Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
 
 Display Product Power score using ui-brand.md score display format.
 
@@ -380,5 +395,7 @@ Display Product Power score using ui-brand.md score display format.
 - [ ] BACKLOG.md updated with new initiative
 - [ ] STATE.md updated
 - [ ] Next-up block displayed
+
+- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
 
 </success_criteria>
