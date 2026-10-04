@@ -257,9 +257,13 @@ created: "{ISO date}"
    - header: "Commit?"
    - question: "Commit '{initiative}' as a bet? Praxis records the kill criteria and reminds the team on the review date."
    - options: "Commit the bet" — review on {experiment end date}, killed if {primary kill criterion} · "Not yet" — keep it as a candidate
-   If committed: `pm_commit_work_item(item_id: <work_item_id>, horizon_end: "<ISO-8601 with offset>", kill_criteria: "<primary kill criterion>", outcome: { new_metric: { name, unit, target, horizon_end } })` using the plan's primary success metric. Praxis writes the decision learning itself.
+   If committed: `pm_commit_work_item(item_id: <work_item_id>, horizon_end: "<ISO-8601 with offset>", kill_criteria: "<primary kill criterion>", outcome: { new_metric: { name, unit, target, horizon_end } })` using the plan's primary success metric. Praxis writes the decision learning itself. The bet is now committed, so upload any queued `SCOPE_PENDING_COMMIT` documents for this work item (discovery, hypothesis, PRD…) right away — `praxis.md` §1, *Queue first*.
 
 On error: fallback + queue `hypothesis/{slug}`.
+
+### Save moment `bet` (LOCAL / CHAT)
+
+The user just defined kill criteria and a review date — a bet worth holding the team to. Offer Praxis once, exactly as `praxis.md` §4 (`bet` row): *"Want Praxis to hold the team to this bet?"* (it keeps the kill criteria and reminds the team on {review date}). If they choose Praxis, queue `hypothesis/{slug}` and guide the connection; on the next run with Praxis connected, the commit rite above runs and the queued documents upload.
 
 ### Local state
 
@@ -269,7 +273,7 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state advance-initiative "{slug
 
 ## 9. Done
 
-Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
+PRAXIS mode: print the result line (`praxis.md` §5) directly under the completion banner. LOCAL / CHAT: say nothing about Praxis here.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -323,7 +327,7 @@ If success criteria are met → `/pm:define "{slug}"`
 - [ ] Initiative stage advanced to "validating"
 - [ ] Next-up block displayed with clear decision guidance
 
-- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
+- [ ] Praxis: saved and recorded (PRAXIS mode) or fallback queued; in LOCAL / CHAT no Praxis line outside the save moments — `praxis.md` §4–§5
 
 </success_criteria>
 </output>

@@ -97,7 +97,7 @@ The installer auto-detects your AI CLI and prompts you to choose scope:
 
 Supports **6 runtimes**. Use `--claude`, `--gemini`, `--codex`, `--copilot`, `--cursor`, or `--opencode` to target a specific one, or `--all` to install everywhere.
 
-At the end, the installer offers to connect **[Praxis](#praxis--product-memory)** — Prisma's product-memory MCP — to your CLI. Optional, and nothing is written without your consent.
+The installer doesn't push anything else. When a command produces something worth keeping — your product definition, a PRD for engineering, a committed bet — it offers once to save it in **[Praxis](#praxis--product-memory)**, Prisma's product-memory MCP. Say no and it won't insist.
 
 Verify with:
 ```
@@ -114,7 +114,7 @@ npx product-builder@latest --gemini    # Target Gemini CLI
 npx product-builder@latest --cursor    # Target Cursor
 npx product-builder@latest --all       # Install to all detected CLIs
 npx product-builder@latest --force     # Overwrite without prompting
-npx product-builder@latest --praxis    # Also connect the Praxis MCP, no prompt
+npx product-builder@latest --praxis    # Also connect the Praxis MCP now
 npx product-builder@latest --no-praxis # Skip the Praxis step
 npx product-builder@latest --uninstall # Remove installed files
 ```
@@ -312,7 +312,7 @@ Product Builder is the method. **Praxis** is where the work lives — every comm
 
 Praxis is Prisma's MCP server (`https://mcp.getprisma.lat/mcp`): a shared, multiplayer memory for your product — ICEDG-scored backlog, committed bets with kill criteria and review dates, tasks with owners, versioned deliverables (vision, ICP, PRDs, designs) and team decisions. Any agent connected to it — Claude Code, Cursor, Gemini CLI, claude.ai — reads and writes the same context, across sessions, machines and teammates.
 
-The installer can register it for you:
+`npx product-builder@latest --praxis` registers it for you:
 
 | CLI | How it's connected |
 |-----|--------------------|

@@ -25,6 +25,8 @@
  *   node pm-tools.cjs praxis queue add|clear <key> | queue list
  *   node pm-tools.cjs praxis unsynced
  *   node pm-tools.cjs praxis nudge on|off
+ *   node pm-tools.cjs praxis offer-shown <product|handoff|bet>
+ *   node pm-tools.cjs praxis prefer praxis|local
  *   node pm-tools.cjs agents-md --product-name <name> [--transformation "<from> → <to>"]
  */
 
@@ -541,6 +543,8 @@ function emptyPraxis() {
     cursor: null,
     nudge: true,
     team_notice_shown: false,
+    preference: null,      // 'praxis' once the user chose it at a save moment
+    offers_shown: [],      // save moments already offered: product | handoff | bet
     records: {},
     queue: [],
   };
@@ -611,6 +615,8 @@ function praxisSummary(productDir) {
     cursor: praxis.cursor,
     nudge: praxis.nudge,
     team_notice_shown: praxis.team_notice_shown,
+    preference: praxis.preference,
+    offers_shown: praxis.offers_shown,
     records_count: Object.keys(praxis.records).length,
     queue: praxis.queue,
     unsynced_count: unsynced.length,
@@ -721,6 +727,8 @@ PRDs, designs, requirements) and decisions live there. Praxis is the source of t
 \`.product/\` is a local mirror.
 
 - Product: \`${praxis.product_id}\`${praxis.workspace_id ? ` · Workspace: \`${praxis.workspace_id}\`` : ''}
+- **The user prefers to keep task, backlog and decision context in Praxis.** When work produces one
+  of these, save it there (calls below) instead of only in local files or in the chat.
 - Start every session with \`pm_get_state\`, then \`pm_get_changes\` to see what teammates changed.
 - Task with an owner and a date → \`pm_add_task\` (assignees: \`pm_list_members\`)
 - Idea or bet for the backlog → \`pm_add_work_item\`; commit it with \`pm_commit_work_item\`
@@ -739,10 +747,16 @@ ${AGENTS_END}`;
 ## Product memory
 
 This product's context lives in \`.product/\` (see below) — read it before product work.
-Tasks, backlog and decisions are designed to live in **Praxis**, Prisma's multiplayer
-product-memory MCP server (\`https://mcp.getprisma.lat/mcp\`). If Praxis tools
-(\`pm_get_state\`, \`pm_add_task\`, \`pm_add_work_item\`…) are available in your session,
-use them; to connect Praxis: \`npx product-builder@latest --praxis\`.
+
+**The user prefers to keep task, backlog and decision context in Praxis** — Prisma's multiplayer
+product-memory MCP server (\`https://mcp.getprisma.lat/mcp\`), where it's versioned and shared with
+every agent and teammate. Take that into account:
+
+- If Praxis tools (\`pm_get_state\`, \`pm_add_task\`, \`pm_add_work_item\`, \`pm_add_learning\`…) are
+  available in your session, save tasks, backlog ideas and decisions there.
+- If they aren't, keep working with \`.product/\`. When the work produces something worth keeping
+  (a task with an owner, a backlog idea, a decision), offer once to save it in Praxis — connect with
+  \`npx product-builder@latest --praxis\`. Never insist; the user decides.
 ${AGENTS_END}`;
 }
 
@@ -1040,6 +1054,22 @@ switch (command) {
         break;
       case 'team-notice-shown':
         praxisSet('team_notice_shown', true);
+        break;
+      case 'offer-shown': {
+        const productDir = requireProductDir();
+        const praxis = readPraxis(productDir);
+        const moment = actionArgs[0];
+        if (!['product', 'handoff', 'bet'].includes(moment)) {
+          outputError('offer-shown expects product | handoff | bet', 'ERR_BAD_ARG');
+          process.exit(1);
+        }
+        if (!praxis.offers_shown.includes(moment)) praxis.offers_shown.push(moment);
+        writePraxis(productDir, praxis);
+        outputJSON({ action: 'praxis-offer-shown', offers_shown: praxis.offers_shown });
+        break;
+      }
+      case 'prefer':
+        praxisSet('preference', actionArgs[0] === 'praxis' ? 'praxis' : 'local');
         break;
       default:
         outputError(`Unknown praxis action: ${action}`, 'ERR_UNKNOWN_ACTION');

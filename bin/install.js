@@ -726,16 +726,6 @@ function installToRuntime(runtime, targetDir) {
 }
 
 // ── Praxis MCP (product memory) ──────────────────────
-function ask(question) {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer.trim().toLowerCase());
-    });
-  });
-}
-
 async function connectPraxis(installs) {
   if (flags.noPraxis) return;
 
@@ -753,24 +743,15 @@ async function connectPraxis(installs) {
   }
   if (pending.length === 0) return;
 
-  log(`  ${c.dim}Every vision, ICP, discovery, PRD and decision gets versioned in Praxis —${c.reset}`);
-  log(`  ${c.dim}readable by any agent, any session, any teammate. Without it, your work${c.reset}`);
-  log(`  ${c.dim}lives only in .product/ on this machine.${c.reset}`);
-  log(`  ${c.dim}Already added Praxis as a claude.ai connector? Answer n — commands detect it at runtime.${c.reset}`);
-  log('');
-
-  let connect = flags.praxis;
-  if (!connect && process.stdin.isTTY) {
-    const answer = await ask(`  Connect Praxis to ${pending.map(p => p.runtime.name).join(', ')}? [${c.bold}Y${c.reset}/n]: `);
-    connect = answer === '' || answer.startsWith('y') || answer.startsWith('s');
+  // No prompt here: there's nothing to save yet. The commands offer Praxis
+  // at the moments the user has produced something worth keeping.
+  if (!flags.praxis) {
+    log(`  ${c.dim}Optional · when you've made something worth keeping, the commands offer to save it${c.reset}`);
+    log(`  ${c.dim}there. Connect now:${c.reset} ${c.cyan}npx product-builder@latest --praxis${c.reset}`);
+    return;
   }
 
   for (const { runtime, targetDir } of pending) {
-    if (!connect) {
-      log(`  ${c.yellow}○${c.reset} ${runtime.name} — not connected. To connect later:`);
-      for (const step of praxis.manualSteps(runtime.id)) log(`      ${c.cyan}${step}${c.reset}`);
-      continue;
-    }
     const res = praxis.register(runtime.id, targetDir);
     if (res.ok) {
       log(`  ${c.green}✓${c.reset} ${runtime.name} — Praxis registered ${c.dim}(${res.where})${c.reset}`);
@@ -778,10 +759,6 @@ async function connectPraxis(installs) {
       log(`  ${c.yellow}○${c.reset} ${runtime.name} — ${res.error || 'manual setup needed'}:`);
     }
     for (const step of res.next || []) log(`      ${c.cyan}${step}${c.reset}`);
-  }
-
-  if (!connect) {
-    log(`  ${c.dim}Or re-run:${c.reset} ${c.cyan}npx product-builder@latest --praxis${c.reset}`);
   }
 }
 

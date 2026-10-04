@@ -340,7 +340,7 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state add-initiative "{problem 
 
 ## 9. Done
 
-Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
+PRAXIS mode: print the result line (`praxis.md` §5) directly under the completion banner. LOCAL / CHAT: say nothing about Praxis here.
 
 Display Product Power score using ui-brand.md score display format.
 
@@ -396,6 +396,6 @@ Display Product Power score using ui-brand.md score display format.
 - [ ] STATE.md updated
 - [ ] Next-up block displayed
 
-- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
+- [ ] Praxis: saved and recorded (PRAXIS mode) or fallback queued; in LOCAL / CHAT no Praxis line outside the save moments — `praxis.md` §4–§5
 
 </success_criteria>

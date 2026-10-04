@@ -152,7 +152,7 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state update-power-score "{slug
 
 ## 7. Done
 
-Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
+PRAXIS mode: print the result line (`praxis.md` §5) directly under the completion banner. LOCAL / CHAT: say nothing about Praxis here.
 
 ```
 ───────────────────────────────────────────────────────────────
@@ -193,6 +193,6 @@ Print the Praxis result line (`praxis.md` §4) directly under the completion ban
 - [ ] Initiative updated in backlog if applicable
 - [ ] Next-up block displayed
 
-- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
+- [ ] Praxis: saved and recorded (PRAXIS mode) or fallback queued; in LOCAL / CHAT no Praxis line outside the save moments — `praxis.md` §4–§5
 
 </success_criteria>

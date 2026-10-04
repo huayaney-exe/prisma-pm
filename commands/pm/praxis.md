@@ -17,7 +17,7 @@ Praxis is Prisma's multiplayer product-memory MCP server. Every Prisma PM comman
 
 **Reads:** `.product/praxis.json`, every local artifact
 **Writes:** Praxis product + artifacts (team visibility), `.product/praxis.json`, `AGENTS.md`
-**Arguments:** `nudge off` / `nudge on` — silence or restore the "Saved only in .product/" line
+**Arguments:** `nudge off` / `nudge on` — stop or restore the save-moment offers (product, handoff, bet)
 </context>
 
 <execution_context>
