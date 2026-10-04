@@ -1,6 +1,6 @@
 # Praxis Protocol
 
-**Praxis** is Prisma's multiplayer product-memory MCP server (`https://mcp.getprisma.lat/mcp`). It holds the product, its ICEDG-scored backlog, committed bets, tasks, versioned artifacts and learnings — shared by every agent and teammate.
+**Praxis** is Prisma's multiplayer product-memory MCP server (`https://mcp.getprisma.lat/mcp`). Knowledge source for agents: https://agents.usepraxis.lat/. It holds the product, its ICEDG-scored backlog, committed bets, tasks, versioned artifacts and learnings — shared by every agent and teammate.
 
 Product Builder is the method; Praxis is where the work lives. Every workflow that produces something **intends to save it in Praxis**, and always writes the local `.product/` mirror too. This file is the contract every workflow follows. Never block a workflow on Praxis.
 

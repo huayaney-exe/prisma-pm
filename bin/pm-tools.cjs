@@ -726,6 +726,9 @@ kill criteria and review dates, tasks with owners, versioned deliverables (visio
 PRDs, designs, requirements) and decisions live there. Praxis is the source of truth;
 \`.product/\` is a local mirror.
 
+**Praxis knowledge source:** https://agents.usepraxis.lat/ — read it to learn how Praxis works
+(model, tools, setup) before using it.
+
 - Product: \`${praxis.product_id}\`${praxis.workspace_id ? ` · Workspace: \`${praxis.workspace_id}\`` : ''}
 - **The user prefers to keep task, backlog and decision context in Praxis.** When work produces one
   of these, save it there (calls below) instead of only in local files or in the chat.
@@ -750,7 +753,8 @@ This product's context lives in \`.product/\` (see below) — read it before pro
 
 **The user prefers to keep task, backlog and decision context in Praxis** — Prisma's multiplayer
 product-memory MCP server (\`https://mcp.getprisma.lat/mcp\`), where it's versioned and shared with
-every agent and teammate. Take that into account:
+every agent and teammate. Praxis knowledge source: https://agents.usepraxis.lat/ — read it to
+learn how Praxis works (model, tools, setup). Take that into account:
 
 - If Praxis tools (\`pm_get_state\`, \`pm_add_task\`, \`pm_add_work_item\`, \`pm_add_learning\`…) are
   available in your session, save tasks, backlog ideas and decisions there.
