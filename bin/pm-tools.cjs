@@ -726,6 +726,9 @@ PRDs, designs, requirements) and decisions live there. Praxis is the source of t
 - Idea or bet for the backlog → \`pm_add_work_item\`; commit it with \`pm_commit_work_item\`
 - Decision, insight or blocker → \`pm_add_learning\`
 - PRD, discovery, design, requirements → \`pm_save_artifact\` (visibility: team)
+- Building or changing something? Read the spec first: \`pm_get_backlog\` / \`pm_get_work_item\` for the
+  initiative, then \`pm_get_artifact\` (\`view: "full"\`) for its PRD, design and requirements — and
+  record decisions you make while building with \`pm_add_learning\` so the PM sees them.
 
 No Praxis tools in your session? Read \`.product/\` instead, and connect Praxis with
 \`npx product-builder@latest --praxis\`. It's always the better path: the context survives

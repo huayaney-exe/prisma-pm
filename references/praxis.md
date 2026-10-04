@@ -53,6 +53,7 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis status
 - **Transformation map** (`pm_create_product` / `pm_update_product`): one key per state that changes, `{"<from>": "<to>"}` — never `{from, to}`. Keys are ≤120 characters: shorten the From state to fit; the verbatim text lives in the vision artifact.
 - **Scope**: `vision`, `icp`, `persona`, `strategy` are product-level (no `work_item_id`). `discovery`, `hypothesis`, `validation`, `prd`, `design`, `requirements` are scoped to the initiative's work item (`work_item_id` = record of `work_item/{slug}`).
 - **Missing work item**: if an initiative-level artifact has no `work_item/{slug}` record, create it first with `pm_add_work_item` (title, slug, `problem_statement`) and record it.
+- **Scoped save rejected** (`UPSTREAM_ERROR` / RPC exception on a save that passes `work_item_id`, while `dry_run` passes): Praxis currently accepts initiative-scoped artifacts only on *committed* work items, and discovery, validation and PRDs come before the commit. Retry once **without** `work_item_id`, adding `"work_item_id"` and `"work_item_slug"` to the frontmatter, then `praxis record <key> <id> --work-item <work_item_id>`. It is still saved in Praxis — show the normal ✓ result line, no error.
 - **ICEDG scores are server-computed** — propose the five inputs, never compute or narrate a number you calculated.
 - **Team notice**: on the first write for a product (`team_notice_shown: false`), add one line — *"Saved for your team in {workspace_name}"* — then run `praxis team-notice-shown`.
 
