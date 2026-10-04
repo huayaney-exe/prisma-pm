@@ -289,7 +289,7 @@ If "Needs changes": switch to plain text and ask what they want to adjust. Updat
 
 ### Praxis (PRAXIS mode)
 
-`/pm:new` is silent about Praxis: no pitch, no question — except the single product-match question from `praxis.md` §1.
+`/pm:new` is silent about Praxis: no pitch, no question — except the single product-resolution question from `praxis.md` §1 (asked only when the workspace already has products, so an existing product under another name isn't duplicated).
 
 1. `pm_create_product` — `name`, `role: "owner"`, `visibility: "team"`, `transformation: {"<From, verbatim>": "<To, verbatim>"}`, `power_score: round(score / 10)`, `power_tier: "<tier>"`, `idempotency_key: "pb:product:<slug>"`.
 2. Link it: `node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis link --workspace "<workspace_id>" --product "<product_id>" --workspace-name "<workspace_name>"` (workspace from `pm_get_state`).
@@ -297,6 +297,10 @@ If "Needs changes": switch to plain text and ask what they want to adjust. Updat
 4. `praxis record vision <artifact_id> --version 1`.
 
 On any error: follow the fallback table in `praxis.md` §1 and queue `vision` (§5).
+
+### Save moment `product` (LOCAL / CHAT)
+
+The user just approved their product definition — the first thing worth keeping. Offer Praxis once, exactly as `praxis.md` §4 (`product` row): *"Your product is defined. Where should it live?"* → Save in Praxis · Keep it in this folder · Don't ask again. If they choose Praxis, queue `vision` and guide the connection; it uploads as soon as Praxis responds.
 
 ### Agent instructions — AGENTS.md (every mode)
 
@@ -306,7 +310,7 @@ Write AGENTS.md so every coding agent that opens this repo (Claude Code, Codex, 
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs agents-md --product-name "{Product Name}" --transformation "{From} → {To}"
 ```
 
-It creates AGENTS.md (or updates only its `praxis` block if the file exists) and, when a CLAUDE.md would make Claude Code skip AGENTS.md, adds a single `@AGENTS.md` import line. Mention what it did in the Done block (one line).
+It creates AGENTS.md (or updates only its `praxis` block if the file exists). The block tells every agent that **the user prefers to keep task, backlog and decision context in Praxis** — use it when connected, offer it (once, never insisting) when not and, when a CLAUDE.md would make Claude Code skip AGENTS.md, adds a single `@AGENTS.md` import line. Mention what it did in the Done block (one line).
 
 ### Local state
 
@@ -316,7 +320,7 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state add-learning "Product ini
 
 ## 8. Done
 
-Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
+PRAXIS mode: print the result line (`praxis.md` §5) directly under the completion banner. LOCAL / CHAT: say nothing about Praxis here.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -373,7 +377,7 @@ Transformation: {from} → {to}
 - [ ] STATE.md updated with initialization entry
 - [ ] Next-up block displayed with `/pm:icp` suggestion
 
-- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
+- [ ] Praxis: saved and recorded (PRAXIS mode) or fallback queued; in LOCAL / CHAT no Praxis line outside the save moments — `praxis.md` §4–§5
 
 </success_criteria>
 </content>

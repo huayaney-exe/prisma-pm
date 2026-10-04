@@ -361,6 +361,10 @@ If "Needs changes": update PRD based on feedback. Loop until approved (max 3 ite
 
 The PRD is the engineering handoff: it is saved with `visibility: "team"` so engineers' agents read it through Praxis. On error: fallback + queue `prd/{slug}`.
 
+### Save moment `handoff` (LOCAL / CHAT)
+
+The PRD is about to go to engineering. Offer Praxis once, exactly as `praxis.md` §4 (`handoff` row): *"This PRD goes to engineering. Keep it where their agents can read it?"* If they choose Praxis, queue `prd/{slug}` and guide the connection. (Until Praxis accepts PRDs on uncommitted work items, the upload waits for the bet's commit — `praxis.md` §2, *Scoped save rejected*.)
+
 ### Local state
 
 ```bash
@@ -369,7 +373,7 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs state advance-initiative "{slug
 
 ## 10. Done
 
-Print the Praxis result line (`praxis.md` §4) directly under the completion banner.
+PRAXIS mode: print the result line (`praxis.md` §5) directly under the completion banner. LOCAL / CHAT: say nothing about Praxis here.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -422,6 +426,6 @@ Acceptance Criteria: {count}
 - [ ] Initiative stage advanced to "defining"
 - [ ] Next-up block displayed with `/pm:require` suggestion
 
-- [ ] Praxis: saved and recorded (PRAXIS mode), or fallback queued, or result line shown (LOCAL / CHAT) — `praxis.md` §4
+- [ ] Praxis: saved and recorded (PRAXIS mode) or fallback queued; in LOCAL / CHAT no Praxis line outside the save moments — `praxis.md` §4–§5
 
 </success_criteria>

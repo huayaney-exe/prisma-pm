@@ -16,7 +16,7 @@ If `$ARGUMENTS` is `nudge off` or `nudge on`:
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis nudge off   # or: on
 ```
 
-Confirm in one line and stop.
+Confirm in one line and stop (`off` = no more save-moment offers; `/pm:praxis` still works any time).
 
 ## 1. Status
 
@@ -76,7 +76,7 @@ Then:
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis link --workspace "<workspace_id>" --product "<product_id>" --workspace-name "<workspace_name>"
 ```
 
-If already linked: call `pm_get_state(product_id)` and, with the stored cursor, `pm_get_changes` — apply `praxis.md` §6 to any local file that is `modified` while its Praxis artifact also changed.
+If already linked: call `pm_get_state(product_id)` and, with the stored cursor, `pm_get_changes` — apply `praxis.md` §7 (mirror rule) to any local file that is `modified` while its Praxis artifact also changed.
 
 ## 5. Upload
 
