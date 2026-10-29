@@ -227,7 +227,7 @@ If changes: regenerate specific personas. Loop until approved (max 3 iterations)
 
 ### Praxis (PRAXIS mode)
 
-For each persona file written: `pm_save_artifact(kind: "persona", slug: "<persona-slug>", markdown: <file>)` (or `pm_update_artifact` if `praxis get persona/<slug>` has a record), then `praxis record persona/<slug> <id> --version <n>`. Include the structured fields in `payload` (`{"name", "role", "job", "pain"}`). On error: fallback + queue each `persona/<slug>`.
+For each persona file written: `pm_add_document(kind: "persona", product_id, title: "<persona name>", markdown: <file>)` (or `pm_update_document` if `praxis get persona/<slug>` has a record), then `praxis record persona/<slug> <id> --version <n>`. Include the structured fields in `payload` (`{"name", "role", "job", "pain"}`). On error: fallback + queue each `persona/<slug>`.
 
 ### Local state
 

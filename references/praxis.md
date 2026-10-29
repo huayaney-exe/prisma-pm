@@ -1,6 +1,6 @@
 # Praxis Protocol
 
-**Praxis** is Prisma's multiplayer product-memory MCP server (`https://mcp.getprisma.lat/mcp`). Knowledge source for agents: https://agents.usepraxis.lat/. It holds the product, its ICEDG-scored backlog, committed bets, tasks, versioned artifacts and learnings — shared by every agent and teammate.
+**Praxis** is Prisma's multiplayer product-memory MCP server (`https://mcp.getprisma.lat/mcp`). Knowledge source for agents: https://agents.usepraxis.lat/. It holds the product, its ICEDG-scored backlog (Backlog → To do → In progress → Done · Canceled), tasks, versioned documents and learnings — shared by every agent and teammate.
 
 Product Builder is the method; Praxis is where the work lives. Every workflow that produces something **intends to save it in Praxis**, and always writes the local `.product/` mirror too. This file is the contract every workflow follows. Never block a workflow on Praxis.
 
@@ -22,10 +22,10 @@ Product Builder is the method; Praxis is where the work lives. Every workflow th
 node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis status
 ```
 
-- **Queue first**: if `queue` is not empty, upload those items now (§2 rules, once the product is linked) before working — skip `SCOPE_PENDING_COMMIT` items whose work item is still a candidate. One line: `✓ {N} queued documents are now in Praxis`. This is how a user who chose Praxis before connecting gets exactly what they chose.
-- **Linked** (`linked: true`): call `pm_get_state` with `product_id`. If `cursor` is set, call `pm_get_changes(since_cursor)` and iterate while `truncated=true`. If a change touches an artifact this workflow reads (vision, ICP, a PRD…), fetch it with `pm_get_artifact` (`view: "full"`) and overwrite the local mirror file **before** working — Praxis wins, a teammate may have changed it. Save the new cursor: `praxis cursor <cursor>`.
+- **Queue first**: if `queue` is not empty, upload those items now (§2 rules, once the product is linked) before working. Items an older version queued as `SCOPE_PENDING_COMMIT` upload now too: Praxis accepts a backlog item's documents in any stage except Canceled. One line: `✓ {N} queued documents are now in Praxis`. This is how a user who chose Praxis before connecting gets exactly what they chose.
+- **Linked** (`linked: true`): call `pm_get_state` with `product_id`. If `cursor` is set, call `pm_get_changes(since_cursor)` and iterate while `truncated=true`. If a change touches an artifact this workflow reads (vision, ICP, a PRD…), fetch it with `pm_get_document(document_id)` and overwrite the local mirror file **before** working — Praxis wins, a teammate may have changed it. Save the new cursor: `praxis cursor <cursor>`.
 - **Not linked**: resolve the product before creating anything — a product may already exist under another name. Call `pm_get_state` (no arguments) and read `about[]` (each product's name and its one-line `is`).
-  - `about[]` is empty → create it: `/pm:new` per its workflow; any other workflow from `PRODUCT.md` with `pm_create_product` (§3, `/pm:new` row). No question.
+  - `about[]` is empty → create it: `/pm:new` per its workflow; any other workflow from `PRODUCT.md` with `pm_add_product` (§3, `/pm:new` row). No question.
   - `about[]` has products → ask once (AskUserQuestion), header "Praxis", question *"Is '{product_name}' one of these Praxis products?"*, options: the closest matches first (same or similar name, or an `is` that describes the same transformation — up to 3, each labeled `{name} — {is}`), then *"No — create '{product_name}'"*. Never create silently when products exist.
   - Multi-workspace users: if the active workspace has no plausible match, check `pm_list_workspaces` and mention which workspace the product will be created in.
   - Then: `praxis link --workspace <workspace.id> --product <id> --workspace-name "<workspace.name>"`.
@@ -45,16 +45,16 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis status
 ## 2. Write rules (PRAXIS mode)
 
 - **Visibility: always `team`.**
-- **No confirmation per write.** Saving is the default. The only questions are the ones listed in this file (product resolution in §1, commit rite in `/pm:validate`, and the three save moments in §4 — LOCAL / CHAT only).
-- **Work item visibility**: `pm_add_work_item` has no `visibility` input and Praxis creates work items as personal. Don't try to work around it; artifacts and learnings still go `team`.
-- **Re-runs version, never duplicate.** Before saving, `praxis get <key>`. If a record exists → `pm_update_artifact(artifact_id, markdown, bump_version: true)`. Otherwise → `pm_save_artifact`.
-- **Keys**: product-level kinds use the bare kind (`vision`, `icp`); everything else is `<kind>/<slug>` (`persona/andrea`, `discovery/{slug}`, `prd/{slug}`, `work_item/{slug}`).
+- **No confirmation per write.** Saving is the default. The only questions are the ones listed in this file (product resolution in §1, the To do decision in `/pm:validate`, and the three save moments in §4 — LOCAL / CHAT only).
+- **Backlog items** go `team` too: pass `visibility: "team"` to `pm_add_backlog_item`.
+- **Re-runs version, never duplicate.** Before saving, `praxis get <key>`. If a record exists → `pm_update_document(document_id, markdown)` (every edit saves a new version). Otherwise → `pm_add_document`. Vision and ICP are one per product: Praxis edits the existing one.
+- **Keys**: product-level kinds use the bare kind (`vision`, `icp`); everything else is `<kind>/<slug>` (`persona/andrea`, `discovery/{slug}`, `prd/{slug}`, `work_item/{slug}` — the backlog item; the key name stays for existing `.product/praxis.json` files).
 - **Idempotency**: pass `idempotency_key: "pb:<key>:<YYYY-MM-DD>"` on every write.
-- **Frontmatter** on every artifact: `{ "source": "product-builder@<VERSION>", "local_path": ".product/<file>" }` — `<VERSION>` is in `~/.claude/skills/prisma-pm/VERSION`.
-- **Transformation map** (`pm_create_product` / `pm_update_product`): one key per state that changes, `{"<from>": "<to>"}` — never `{from, to}`. Keys are ≤120 characters: shorten the From state to fit; the verbatim text lives in the vision artifact.
-- **Scope**: `vision`, `icp`, `persona`, `strategy` are product-level (no `work_item_id`). `discovery`, `hypothesis`, `validation`, `prd`, `design`, `requirements` are scoped to the initiative's work item (`work_item_id` = record of `work_item/{slug}`).
-- **Missing work item**: if an initiative-level artifact has no `work_item/{slug}` record, create it first with `pm_add_work_item` (title, slug, `problem_statement`) and record it.
-- **Scoped save rejected** (`UPSTREAM_ERROR` on a save that passes `work_item_id` while `dry_run` passes): Praxis currently accepts initiative-scoped kinds (`discovery`, `hypothesis`, `validation`, `prd`, `design`, `requirements`) only on *committed* work items, and rejects them at product level. Don't work around it. Queue it — `praxis queue add <key> --reason SCOPE_PENDING_COMMIT` — and show: `○ {Artifact} saved locally · Praxis takes it once the bet is committed (/pm:validate), then it uploads on its own`.
+- **Frontmatter** on every document (the `frontmatter` input; extra data a workflow lists goes there too): `{ "source": "product-builder@<VERSION>", "local_path": ".product/<file>" }` — `<VERSION>` is in `~/.claude/skills/prisma-pm/VERSION`.
+- **Transformation map** (`pm_add_product` / `pm_update_product`): one key per state that changes, `{"<from>": "<to>"}` — never `{from, to}`. Keys are ≤120 characters: shorten the From state to fit; the verbatim text lives in the vision artifact.
+- **Scope**: `vision`, `icp`, `persona`, `strategy` are product-level (pass `product_id`). `discovery`, `hypothesis`, `validation`, `prd`, `design`, `requirements` belong to the initiative's backlog item (`backlog_item_id` = record of `work_item/{slug}`), in any stage except Canceled.
+- **Missing backlog item**: if an initiative-level document has no `work_item/{slug}` record, create it first with `pm_add_backlog_item(product_id, title, problem_statement, visibility: "team")` and record its `backlog_item_id` under `work_item/{slug}`.
+- **Canceled item**: Praxis rejects documents on a Canceled backlog item. Ask the user whether to start a new backlog item for this work; never reopen or work around it.
 - **ICEDG scores are server-computed** — propose the five inputs, never compute or narrate a number you calculated.
 - **Team notice**: on the first write for a product (`team_notice_shown: false`), add one line — *"Saved for your team in {workspace_name}"* — then run `praxis team-notice-shown`.
 
@@ -64,23 +64,25 @@ node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis status
 
 | Workflow | Praxis calls | Record keys | Local mirror |
 |----------|--------------|-------------|--------------|
-| `/pm:new` | `pm_create_product(name, role: "owner", visibility: "team", transformation: {"<from>": "<to>"}, power_score: round(score/10), power_tier)` → `praxis link`; then `pm_save_artifact(kind: "vision", slug: "vision", markdown: PRODUCT.md)` | `vision` | `PRODUCT.md` |
-| `/pm:icp` | `pm_save_artifact(kind: "icp", slug: "icp")` | `icp` | `ICP.md` |
-| `/pm:persona` | one `pm_save_artifact(kind: "persona", slug: "<persona-slug>")` per persona | `persona/<slug>` | `PERSONAS/` |
-| `/pm:discover` | `pm_add_work_item(title, slug, problem_statement)` → `pm_save_artifact(kind: "discovery", work_item_id)` → `pm_add_learning(kind: "insight")` for the top insight | `work_item/{slug}`, `discovery/{slug}` | `DISCOVERY/{slug}-BRIEF.md` |
-| `/pm:power` | Matches a work item → `pm_add_learning(kind: "insight", work_item_id, text: "Product Power {score} ({tier}): ΔState {x} × Intensity {y} × Frequency {z}")`. Scores the whole product → `pm_update_product(power_score: round(score/10), power_tier)` | — | `BACKLOG.md` |
-| `/pm:strategy` | `pm_score_work_items` for every ranked initiative (create missing ones with `pm_add_work_item` first). Praxis computes the official rank | `work_item/{slug}` | `BACKLOG.md` (Praxis order) |
-| `/pm:validate` | `pm_save_artifact(kind: "hypothesis", work_item_id)`; then the **commit rite** (see workflow) | `hypothesis/{slug}` | `DISCOVERY/{slug}-VALIDATION.md` |
-| `/pm:define` | `pm_save_artifact(kind: "prd", work_item_id)` → `pm_link_artifacts(prd → discovery, relation: "derived_from")` if a discovery record exists | `prd/{slug}` | `DEFINITIONS/{slug}-PRD.md` |
-| `/pm:design` | `pm_save_artifact(kind: "design", work_item_id)` → `pm_link_artifacts(design → prd, relation: "addresses")` | `design/{slug}` | `DEFINITIONS/{slug}-DESIGN.md` |
-| `/pm:require` | `pm_save_artifact(kind: "requirements", work_item_id)` → `pm_link_artifacts(requirements → prd, relation: "derived_from")` | `requirements/{slug}` | `DEFINITIONS/{slug}-REQUIREMENTS.md` |
+| `/pm:new` | `pm_add_product(name, role: "owner", visibility: "team", transformation: {"<from>": "<to>"})` → `pm_update_product(product_id, power_score: round(score/10), power_tier)` → `praxis link`; then `pm_add_document(kind: "vision", product_id, title, markdown: PRODUCT.md)` | `vision` | `PRODUCT.md` |
+| `/pm:icp` | `pm_add_document(kind: "icp", product_id)` | `icp` | `ICP.md` |
+| `/pm:persona` | one `pm_add_document(kind: "persona", product_id)` per persona | `persona/<slug>` | `PERSONAS/` |
+| `/pm:discover` | `pm_add_backlog_item(product_id, title, problem_statement, visibility: "team")` → `pm_add_document(kind: "discovery", backlog_item_id)` → `pm_add_learning(kind: "insight", backlog_item_id)` for the top insight | `work_item/{slug}`, `discovery/{slug}` | `DISCOVERY/{slug}-BRIEF.md` |
+| `/pm:power` | Matches a backlog item → `pm_add_learning(kind: "insight", backlog_item_id, text: "Product Power {score} ({tier}): ΔState {x} × Intensity {y} × Frequency {z}")`. Scores the whole product → `pm_update_product(power_score: round(score/10), power_tier)` | — | `BACKLOG.md` |
+| `/pm:strategy` | `pm_score_backlog_items(items: [{backlog_item_id, inputs}])` for every ranked initiative (create missing ones with `pm_add_backlog_item` first). Praxis computes the official rank; read it with `pm_list_backlog(product_id, status: "backlog")` | `work_item/{slug}` | `BACKLOG.md` (Praxis order) |
+| `/pm:validate` | `pm_add_document(kind: "hypothesis", backlog_item_id)`; then the **To do decision** (see workflow) | `hypothesis/{slug}` | `DISCOVERY/{slug}-VALIDATION.md` |
+| `/pm:define` | `pm_add_document(kind: "prd", backlog_item_id)` → `pm_link_documents(links: [{from_document_id: <prd>, to_document_id: <discovery>, relation: "derived_from"}])` if a discovery record exists | `prd/{slug}` | `DEFINITIONS/{slug}-PRD.md` |
+| `/pm:design` | `pm_add_document(kind: "design", backlog_item_id)` → `pm_link_documents(links: [{from_document_id: <design>, to_document_id: <prd>, relation: "addresses"}])` | `design/{slug}` | `DEFINITIONS/{slug}-DESIGN.md` |
+| `/pm:require` | `pm_add_document(kind: "requirements", backlog_item_id)` → `pm_link_documents(links: [{from_document_id: <requirements>, to_document_id: <prd>, relation: "derived_from"}])` | `requirements/{slug}` | `DEFINITIONS/{slug}-REQUIREMENTS.md` |
 | Any checkpoint decision | `pm_add_learning(kind: "decision", provenance: "user_stated")` | — | `STATE.md` learning |
 
 After every successful write:
 
 ```bash
-node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis record "<key>" "<id>" [--work-item <work_item_id>] [--version <n>]
+node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis record "<key>" "<id>" [--work-item <backlog_item_id>] [--version <n>]
 ```
+
+`<id>` is the `document_id` for documents and the `backlog_item_id` for `work_item/{slug}`.
 
 **ICEDG from the method's own scores** (`/pm:strategy`, `/pm:discover` when scoring):
 - `impacto` ← Product Power: `clamp(round(power / 100), 1, 10)`, rationale *"Product Power {score} ({tier})"*.

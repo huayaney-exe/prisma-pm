@@ -173,7 +173,7 @@ If "Needs changes": update ICP.md accordingly and ask again. Loop until approved
 
 ### Praxis (PRAXIS mode)
 
-Save the ICP per `praxis.md` §3: `pm_save_artifact(kind: "icp", slug: "icp", markdown: ICP.md)` — or `pm_update_artifact(bump_version: true)` if `praxis get icp` returns a record. Then `praxis record icp <id> --version <n>`. On error: fallback + queue `icp`.
+Save the ICP per `praxis.md` §3: `pm_add_document(kind: "icp", product_id, title: "{Product Name} — ICP", markdown: ICP.md)` — or `pm_update_document(document_id, markdown)` if `praxis get icp` returns a record. Then `praxis record icp <id> --version <n>`. On error: fallback + queue `icp`.
 
 ### Local state
 

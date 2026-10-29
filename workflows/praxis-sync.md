@@ -68,7 +68,7 @@ If `linked` is false, call `pm_get_state` and use AskUserQuestion:
 - question: "Which Praxis product is '{product_name}'?"
 - options: up to 3 products from `about[]` (name-matching first) + "Create '{product_name}' in Praxis"
 
-Create → `pm_create_product` from `PRODUCT.md` exactly as the `/pm:new` row of `praxis.md` §3 (team visibility, transformation map, power score/tier).
+Create → `pm_add_product` (then `pm_update_product` for the power score) from `PRODUCT.md` exactly as the `/pm:new` row of `praxis.md` §3 (team visibility, transformation map, power score/tier).
 
 Then:
 
@@ -91,7 +91,7 @@ Upload in dependency order, following `praxis.md` §2–§3 for every call (vers
 
 1. `vision`, `icp`, then each `persona/<slug>`
 2. Per initiative slug: `work_item/{slug}` (create if missing, from the brief's title and problem statement) → `discovery/{slug}` → `hypothesis/{slug}` → `prd/{slug}` → `design/{slug}` → `requirements/{slug}`
-3. Links: prd → discovery `derived_from`, design → prd `addresses`, requirements → prd `derived_from` (use `pm_link_artifacts_batch` when there are several)
+3. Links: prd → discovery `derived_from`, design → prd `addresses`, requirements → prd `derived_from` (one `pm_link_documents` call with every link, up to 50)
 
 A failure on one item doesn't stop the rest: queue it (`praxis queue add`) and continue.
 

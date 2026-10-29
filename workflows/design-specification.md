@@ -274,9 +274,9 @@ If "Needs changes": update Design Spec based on feedback. Loop until approved (m
 
 ### Praxis (PRAXIS mode)
 
-1. Ensure the work item exists (`praxis.md` §2, *Missing work item*).
-2. `pm_save_artifact(kind: "design", slug: "{slug}", work_item_id, markdown: <design spec>)` (or `pm_update_artifact`) → `praxis record design/{slug} <id> --work-item <work_item_id> --version <n>`.
-3. If `praxis get prd/{slug}` has a record: `pm_link_artifacts(source_id: <design_id>, target_id: <prd_id>, relation: "addresses")`.
+1. Ensure the backlog item exists (`praxis.md` §2, *Missing backlog item*).
+2. `pm_add_document(kind: "design", backlog_item_id, title: "{initiative} — Design", markdown: <design spec>)` (or `pm_update_document`) → `praxis record design/{slug} <id> --work-item <backlog_item_id> --version <n>`.
+3. If `praxis get prd/{slug}` has a record: `pm_link_documents(links: [{from_document_id: <design_id>, to_document_id: <prd_id>, relation: "addresses"}])`.
 
 On error: fallback + queue `design/{slug}`.
 

@@ -326,9 +326,9 @@ If "Needs changes": update brief accordingly and present this checkpoint again. 
 
 ### Praxis (PRAXIS mode)
 
-1. Work item: if `praxis get work_item/{slug}` has no record → `pm_add_work_item(product_id, title: "{problem title}", slug: "{slug}", problem_statement: <transformation map summary>)` → `praxis record work_item/{slug} <id>`. Leave it unscored unless the user already gave ICEDG-relevant numbers (`/pm:strategy` scores it).
-2. Brief: `pm_save_artifact(kind: "discovery", slug: "{slug}", work_item_id, markdown: <brief>, payload: {"power_score", "power_tier", "assumptions": [...]})` (or `pm_update_artifact`) → `praxis record discovery/{slug} <id> --work-item <work_item_id> --version <n>`.
-3. Top insight: `pm_add_learning(kind: "insight", work_item_id, provenance: "agent_inferred", text: <the single most important finding>)`.
+1. Backlog item: if `praxis get work_item/{slug}` has no record → `pm_add_backlog_item(product_id, title: "{problem title}", problem_statement: <transformation map summary>, visibility: "team")` → `praxis record work_item/{slug} <backlog_item_id>`. Leave it unscored unless the user already gave ICEDG-relevant numbers (`/pm:strategy` scores it).
+2. Brief: `pm_add_document(kind: "discovery", backlog_item_id, title: "{problem title} — Discovery", markdown: <brief>, frontmatter: {"power_score", "power_tier", "assumptions": [...]})` (or `pm_update_document`) → `praxis record discovery/{slug} <id> --work-item <backlog_item_id> --version <n>`.
+3. Top insight: `pm_add_learning(kind: "insight", backlog_item_id, provenance: "agent_inferred", text: <the single most important finding>)`.
 
 On error: fallback + queue `discovery/{slug}`.
 

@@ -355,9 +355,9 @@ If "Needs changes": update PRD based on feedback. Loop until approved (max 3 ite
 
 ### Praxis (PRAXIS mode)
 
-1. Ensure the work item exists (`praxis.md` §2, *Missing work item*).
-2. `pm_save_artifact(kind: "prd", slug: "{slug}", work_item_id, markdown: <PRD>, frontmatter + {"format": "<lean|full|one-pager>"})` (or `pm_update_artifact` with `bump_version: true`) → `praxis record prd/{slug} <id> --work-item <work_item_id> --version <n>`.
-3. If `praxis get discovery/{slug}` has a record: `pm_link_artifacts(source_id: <prd_id>, target_id: <discovery_id>, relation: "derived_from")`.
+1. Ensure the backlog item exists (`praxis.md` §2, *Missing backlog item*).
+2. `pm_add_document(kind: "prd", backlog_item_id, title: "{initiative} — PRD", markdown: <PRD>, frontmatter + {"format": "<lean|full|one-pager>"})` (or `pm_update_document(document_id, markdown)`) → `praxis record prd/{slug} <id> --work-item <backlog_item_id> --version <n>`.
+3. If `praxis get discovery/{slug}` has a record: `pm_link_documents(links: [{from_document_id: <prd_id>, to_document_id: <discovery_id>, relation: "derived_from"}])`.
 
 The PRD is the engineering handoff: it is saved with `visibility: "team"` so engineers' agents read it through Praxis. On error: fallback + queue `prd/{slug}`.
 

@@ -291,10 +291,10 @@ If "Needs changes": switch to plain text and ask what they want to adjust. Updat
 
 `/pm:new` is silent about Praxis: no pitch, no question — except the single product-resolution question from `praxis.md` §1 (asked only when the workspace already has products, so an existing product under another name isn't duplicated).
 
-1. `pm_create_product` — `name`, `role: "owner"`, `visibility: "team"`, `transformation: {"<From, verbatim>": "<To, verbatim>"}`, `power_score: round(score / 10)`, `power_tier: "<tier>"`, `idempotency_key: "pb:product:<slug>"`.
+1. `pm_add_product` — `name`, `role: "owner"`, `visibility: "team"`, `transformation: {"<From, verbatim>": "<To, verbatim>"}`, `idempotency_key: "pb:product:<slug>"`. Then `pm_update_product` — `product_id`, `power_score: round(score / 10)`, `power_tier: "<tier>"`.
 2. Link it: `node ~/.claude/skills/prisma-pm/bin/pm-tools.cjs praxis link --workspace "<workspace_id>" --product "<product_id>" --workspace-name "<workspace_name>"` (workspace from `pm_get_state`).
-3. `pm_save_artifact` — `kind: "vision"`, `slug: "vision"`, `title: "{Product Name} — Vision"`, `markdown`: the full PRODUCT.md, `visibility: "team"`, frontmatter per `praxis.md` §2.
-4. `praxis record vision <artifact_id> --version 1`.
+3. `pm_add_document` — `kind: "vision"`, `product_id`, `title: "{Product Name} — Vision"`, `markdown`: the full PRODUCT.md, `visibility: "team"`, frontmatter per `praxis.md` §2.
+4. `praxis record vision <document_id> --version 1`.
 
 On any error: follow the fallback table in `praxis.md` §1 and queue `vision` (§5).
 

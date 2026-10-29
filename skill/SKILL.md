@@ -3,7 +3,7 @@ name: prisma-pm
 description: Context-resilient system for transformation-driven product building
 metadata:
   author: Luis Huayaney
-  version: 0.5.1
+  version: 0.5.2
   tags: product-management, discovery, strategy, prd, jtbd, rice, validation, context-engineering, icp, personas
 ---
 
@@ -57,7 +57,7 @@ This formula drives every decision in Prisma PM. Every discovery, every prioriti
 
 ## Product memory: Praxis
 
-Praxis is Prisma's multiplayer product-memory MCP server (`https://mcp.getprisma.lat/mcp`). Every command saves its output there first — product, vision, ICP, personas, work items, discoveries, hypotheses, PRDs, designs, requirements, decisions — with team visibility, and writes the local `.product/` mirror too. Without Praxis everything still works locally. The contract is `references/praxis.md`.
+Praxis is Prisma's multiplayer product-memory MCP server (`https://mcp.getprisma.lat/mcp`). Every command saves its output there first — product, vision, ICP, personas, backlog items, discoveries, hypotheses, PRDs, designs, requirements, decisions — with team visibility, and writes the local `.product/` mirror too. Without Praxis everything still works locally. The contract is `references/praxis.md`.
 
 ## How to use
 
