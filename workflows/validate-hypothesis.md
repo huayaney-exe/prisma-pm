@@ -251,13 +251,13 @@ created: "{ISO date}"
 
 ### Praxis (PRAXIS mode)
 
-1. Ensure the work item exists (`praxis.md` §2, *Missing work item*).
-2. `pm_save_artifact(kind: "hypothesis", slug: "{slug}", work_item_id, markdown: <validation plan>, payload: {"hypotheses": [...], "kill_criteria": [...]})` (or `pm_update_artifact`) → `praxis record hypothesis/{slug} <id> --work-item <work_item_id> --version <n>`.
-3. **Commit rite** — this is a decision, so ask once (AskUserQuestion):
-   - header: "Commit?"
-   - question: "Commit '{initiative}' as a bet? Praxis records the kill criteria and reminds the team on the review date."
-   - options: "Commit the bet" — review on {experiment end date}, killed if {primary kill criterion} · "Not yet" — keep it as a candidate
-   If committed: `pm_commit_work_item(item_id: <work_item_id>, horizon_end: "<ISO-8601 with offset>", kill_criteria: "<primary kill criterion>", outcome: { new_metric: { name, unit, target, horizon_end } })` using the plan's primary success metric. Praxis writes the decision learning itself. The bet is now committed, so upload any queued `SCOPE_PENDING_COMMIT` documents for this work item (discovery, hypothesis, PRD…) right away — `praxis.md` §1, *Queue first*.
+1. Ensure the backlog item exists (`praxis.md` §2, *Missing backlog item*).
+2. `pm_add_document(kind: "hypothesis", backlog_item_id, title: "{initiative} — Validation plan", markdown: <validation plan>, frontmatter: {"hypotheses": [...], "kill_criteria": [...]})` (or `pm_update_document`) → `praxis record hypothesis/{slug} <id> --work-item <backlog_item_id> --version <n>`.
+3. **To do decision** — this is a decision, so ask once (AskUserQuestion):
+   - header: "To do?"
+   - question: "Move '{initiative}' to To do? Praxis records the review date and the condition to drop it, and reminds the team on the review date."
+   - options: "Move it to To do" — review on {experiment end date}, dropped if {primary kill criterion} · "Not yet" — keep it in the Backlog
+   If they move it: create the plan's primary success metric with `pm_add_metric(product_id, name, unit, target, horizon_end)` (skip if `pm_list_metrics` already has it), then `pm_update_backlog_item(backlog_item_id, status: "to_do", review_date: "<ISO-8601 with offset>", drop_if: "<primary kill criterion>", moves_metric_id: <metric_id>)`. Praxis writes the decision note itself.
 
 On error: fallback + queue `hypothesis/{slug}`.
 

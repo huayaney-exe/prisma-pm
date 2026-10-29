@@ -236,9 +236,9 @@ Use AskUserQuestion:
 
 With Praxis linked, **Praxis is the backlog and ICEDG is the official ranking**; RICE + Product Power feed it.
 
-1. For every ranked initiative without a `work_item/{slug}` record: `pm_add_work_item(product_id, title, slug, problem_statement)` → `praxis record work_item/{slug} <id>`.
-2. One `pm_score_work_items` call with the five ICEDG inputs per item, derived as in `praxis.md` §3 (*ICEDG from the method's own scores*), each with its `rationale`. Propose the values and accept corrections; at most one clarifying question per item.
-3. Read the result order with `pm_get_backlog(product_id)` and use **that** order for the table below (add an `ICEDG` column). Never compute the score yourself.
+1. For every ranked initiative without a `work_item/{slug}` record: `pm_add_backlog_item(product_id, title, problem_statement, visibility: "team")` → `praxis record work_item/{slug} <backlog_item_id>`.
+2. One `pm_score_backlog_items` call (`items: [{backlog_item_id, inputs}]`, up to 50, same product) with the five ICEDG inputs per item, derived as in `praxis.md` §3 (*ICEDG from the method's own scores*), each with its `rationale`. Propose the values and accept corrections; at most one clarifying question per item.
+3. Read the result order with `pm_list_backlog(product_id, status: "backlog")` and use **that** order for the table below (add an `ICEDG` column). Never compute the score yourself.
 4. Record the user's force-rank decision: `pm_add_learning(kind: "decision", provenance: "user_stated", text: "Ranked {N} initiatives. Top: {name} — {why}")`.
 
 On error: fall back to the RICE ranking below and queue `work_item/<slug>` for each unscored item.

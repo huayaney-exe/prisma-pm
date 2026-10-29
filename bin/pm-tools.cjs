@@ -735,11 +735,11 @@ PRDs, designs, requirements) and decisions live there. Praxis is the source of t
   context. If one of these only lives in local files or in the chat, suggest saving it in Praxis.
 - Start every session with \`pm_get_state\`, then \`pm_get_changes\` to see what teammates changed.
 - Task with an owner and a date → \`pm_add_task\` (assignees: \`pm_list_members\`)
-- Idea or bet for the backlog → \`pm_add_work_item\`; commit it with \`pm_commit_work_item\`
+- Idea for the backlog → \`pm_add_backlog_item\`; decide it (move to To do) with \`pm_update_backlog_item\`
 - Decision, insight or blocker → \`pm_add_learning\`
-- PRD, discovery, design, requirements → \`pm_save_artifact\` (visibility: team)
-- Building or changing something? Read the spec first: \`pm_get_backlog\` / \`pm_get_work_item\` for the
-  initiative, then \`pm_get_artifact\` (\`view: "full"\`) for its PRD, design and requirements — and
+- PRD, discovery, design, requirements → \`pm_add_document\` (visibility: team)
+- Building or changing something? Read the spec first: \`pm_list_backlog\` / \`pm_get_backlog_item\` for the
+  initiative, then \`pm_get_document\` for its PRD, design and requirements — and
   record decisions you make while building with \`pm_add_learning\` so the PM sees them.
 
 No Praxis tools in your session? Read \`.product/\` instead, and connect Praxis with
@@ -760,8 +760,8 @@ across sessions, machines and tools. Praxis knowledge source: https://agents.use
 it to learn how Praxis works (model, tools, setup).
 
 - One short suggestion per milestone, tied to what was just produced. Never insist; the user decides.
-- If Praxis tools (\`pm_get_state\`, \`pm_add_task\`, \`pm_add_work_item\`, \`pm_add_learning\`,
-  \`pm_save_artifact\`…) are available in your session, use them for those milestones.
+- If Praxis tools (\`pm_get_state\`, \`pm_add_task\`, \`pm_add_backlog_item\`, \`pm_add_learning\`,
+  \`pm_add_document\`…) are available in your session, use them for those milestones.
 - Otherwise keep working with \`.product/\`; to connect Praxis: \`npx product-builder@latest --praxis\`.
 ${AGENTS_END}`;
 }

@@ -221,9 +221,9 @@ If changes: update requirements. Loop until approved (max 3 iterations).
 
 ### Praxis (PRAXIS mode)
 
-1. Ensure the work item exists (`praxis.md` §2, *Missing work item*).
-2. `pm_save_artifact(kind: "requirements", slug: "{slug}", work_item_id, markdown: <requirements>, payload: {"epics": N, "stories": M})` (or `pm_update_artifact`) → `praxis record requirements/{slug} <id> --work-item <work_item_id> --version <n>`.
-3. If `praxis get prd/{slug}` has a record: `pm_link_artifacts(source_id: <requirements_id>, target_id: <prd_id>, relation: "derived_from")`.
+1. Ensure the backlog item exists (`praxis.md` §2, *Missing backlog item*).
+2. `pm_add_document(kind: "requirements", backlog_item_id, title: "{initiative} — Requirements", markdown: <requirements>, frontmatter: {"epics": N, "stories": M})` (or `pm_update_document`) → `praxis record requirements/{slug} <id> --work-item <backlog_item_id> --version <n>`.
+3. If `praxis get prd/{slug}` has a record: `pm_link_documents(links: [{from_document_id: <requirements_id>, to_document_id: <prd_id>, relation: "derived_from"}])`.
 
 On error: fallback + queue `requirements/{slug}`.
 

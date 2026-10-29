@@ -139,7 +139,7 @@ Provide interpretation based on the score:
 
 ## 6. Optional: Update Initiative
 
-**PRAXIS mode** (`praxis.md` §3, `/pm:power` row): if the problem matches a `work_item/{slug}` record → `pm_add_learning(kind: "insight", work_item_id, text: "Product Power {score} ({tier}): ΔState {x} × Intensity {y} × Frequency {z}")`. If the user scored the whole product → `pm_update_product(product_id, power_score: round(score / 10), power_tier)`. Standalone use with no workspace: no write.
+**PRAXIS mode** (`praxis.md` §3, `/pm:power` row): if the problem matches a `work_item/{slug}` record → `pm_add_learning(kind: "insight", backlog_item_id, text: "Product Power {score} ({tier}): ΔState {x} × Intensity {y} × Frequency {z}")`. If the user scored the whole product → `pm_update_product(product_id, power_score: round(score / 10), power_tier)`. Standalone use with no workspace: no write.
 
 **Local state:**
 
